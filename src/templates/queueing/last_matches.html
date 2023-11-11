@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block bodysections %}
+
+<section class="hero is-warning">
+  {# Fancy full-page header.  Yay #}
+  <div class="hero-body">
+    <p class="title">
+      Last Matches
+    </p>
+    {% if arena_settings.event_name %}
+    <p class="subtitle">
+      {{ arena_settings.event_name }} | bracket powered by <b>TrueFinals</b>
+    </p>
+    {% endif %}
+  </div>
+
+
+  {# This snippet is only applicable to multi-arena events.  This should avoid stuff breaking too egregiously. #}
+  {% if cages|length > 1%}
+  <div class="hero-foot">
+  <nav class="tabs is-boxed is-fullwidth">
+    <div class="container">
+      <ul>
+        {% for cage in cages %}
+          <li>{{ cage.name }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </nav>
+</div>
+{% endif %}
+</section>
+<section class="section">
+  {% if div_matches %}
+    <table class="table is-striped is-fullwidth">
+      <thead>
+        <tr>
+          <th colspan="5">
+            {{ div_matches|length }} matches complete
+          </th>
+        </tr>
+      </thead>
+        <thead>
+          <tr>
+            <th>Division</th>
+            <th>Match Info</th>
+            <th>Red</th>
+            <th>Blue</th>
+            <th>Outcome</th>
+          </tr>
+        </thead>
+          {% for match in div_matches._matches %}
+          <tr>
+            <td>{{ match.weightclass }} </td>
+            <td>
+              {% if match.name == "" %}
+              {{ match.id }}
+              {% else %}
+                {{ match.name }} | [{{ match.id }}]
+              {% endif %}
+            </td>
+            {% for competitor in match.slots %}
+            <td {% if match.winner_name == competitor.gscrl_player_name %} class="has-background-success-light"{% endif %}>
+                  <b>{{ competitor.gscrl_player_name }}</b> 
+                  {% if competitor['gscrl_wlt'] %}
+                  <div class="field is-grouped is-grouped-multiline">
+                    <div class="control">
+                    <div class="tags has-addons">
+                      <span class="tag">Wins</span>
+                      <span class="tag is-success is-light">{{ competitor['gscrl_wlt']['w'] }}</span>
+                    </div>
+                  </div>
+
+                  <div class="control">
+                    <div class="tags has-addons">
+                      <span class="tag">Losses</span>
+                      <span class="tag is-danger is-light">{{ competitor['gscrl_wlt']['l'] }}</span>
+                    </div>
+                  </div>
+
+                    <div class="control">
+                    <div class="tags has-addons">
+                      <span class="tag">Ties</span>
+                      <span class="tag is-warning is-light">{{ competitor['gscrl_wlt']['t'] }}</span>
+                    </div>
+                  </div>
+                </div>
+                  {% endif %}
+              </td>
+            {% endfor %}
+            {% if match.slots|length == 1 %} 
+            <td>
+              <i>waiting . . . </i>
+            </td>
+            {% endif %}
+            <td>
+
+              <div class="field is-grouped is-grouped-multiline">
+                <div class="control">
+                <div class="tags has-addons">
+                  {% if match.resultAnnotation != None %}
+                  <span class="tag is-link">Win by</span>
+                  <span class="tag is-dark">{{match.result_string}}</span>
+                  {% endif %}
+                  {% if match.winner_name != "" %}
+                  <span class="tag is-success">Winner</span>
+                  <span class="tag is-dark"><b> {{ match.winner_name }} </b></span>
+                  {% endif %}
+                </div>
+              </div>
+
+            </td>
+          </tr>
+          {% endfor %}
+
+        {% else %}
+        <p>There are no matches in the system yet to be marked as finished.  The event hasn't started yet, or posted scores.</p>
+        <h3> Hang tight!</h3>
+        {% endif %}
+  </section>
+
+{% endblock %}

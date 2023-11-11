@@ -1,0 +1,46 @@
+{% extends "screen_base.html" %}
+{% block basecontent %}
+  <body>
+
+    <!-- workaround until the things are normalzed with routes and shit -->
+<style> 
+@font-face {
+  font-family: DSEG14;
+  src: url('static/DSEG14ModernMini-Bold.woff2') format('woff2');
+}
+</style>
+
+    <div id="backgrounditem" class="split left">
+        <div class="timer" id="timer" style="width: 100%; height: 100%;  line-height: 1.0;">
+            ---
+        </div>
+      </div>     
+
+    <script>
+        function setTimerString(timer_value) {
+            document.getElementById("timer").innerHTML = timer_value;
+            textFit(document.getElementsByClassName('timer'), {alignHoriz: true, alignVert: true, maxFontSize: 999, widthOnly: false, detectMultiLine: true});
+        };
+        
+        setTimerString("---");
+    </script>
+    <script type="text/javascript" charset="utf-8">
+        socket.on('connect', function() {
+            setTimerString("000"); // should fix broken scaling for only loading once the window is rendered otherwise.  Yipee?
+            socket.emit("join_cage_request", {'cage_id': {{ cageID }} });
+            socket.emit('client_attests_existence', {'location': window.location.href});
+        });
+        
+
+        socket.on("timer_event", function(timer_data) {
+            setTimerString(timer_data);
+        });
+
+        socket.on("timer_bg_event", function(timer_bg_color) { //used for eSTOP only?
+            console.log(timer_bg_color)
+            document.getElementById("backgrounditem").style.backgroundColor = timer_bg_color.color;
+        });
+    
+</script>
+</body>
+{% endblock %}

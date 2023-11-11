@@ -1,0 +1,88 @@
+{% extends "screen_base.html" %}
+{% block basecontent %}
+ <body>
+<style>
+    body {
+        font-family: GlacialIndifference;
+        background-color:rgb(37, 37, 37);
+        margin: 0; /* this prevents a small bleed on the screen I guess? */
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .upcoming-matches {
+        width: 100%;
+        max-height:100%;
+        margin: 0 auto;
+        /*padding: 10px;*/
+        position: relative;
+        height:20vh;
+    }
+
+    .upper-header {
+        width: 80%;
+        height: 100%;
+        margin: 0 auto;
+        background-color: #3e8ed0;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        font-size:5vh;
+    }
+
+    .header-subtitle {
+        font-size:3vh;
+    }
+
+    .lower-portion-matches {
+        height:80vh;
+        overflow-x: hidden;
+        display: flex;
+
+    }
+    </style>
+
+<script> //user interaction stubs.
+    var cageID = {{ cageID }};
+</script>
+
+
+<div class="upcoming-matches">
+    <div class="upper-header" id="upper-header">
+        <div>
+            <b>
+                Garden State Combat Robotics League
+            </b>
+            <br>
+            <div class="header-subtitle">
+                <!--
+                    Change to current event name, fetch via API maybe?  idk.
+                -->Spring Smash Upcoming Matches | Bracket powered by <b>TrueFinals</b>
+            </div>
+            
+        </div>
+    </div>
+</div>
+<div>
+    <div class="lower-portion-matches" id="lower-matches">
+        tghgfh
+    </div>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+    socket.on('connect', function() {
+        socket.emit("join_cage_request", {'cage_id': {{ cageID }} })
+    });
+
+socket.on("timer_event", function(timer_data) {
+    // ???
+});
+
+//textFit(document.getElementsByClassName('upper-header'), {alignHoriz: true, maxFontSize: 600, widthOnly: true, detectMultiLine: false});
+    
+</script>
+</body>
+{% endblock %}

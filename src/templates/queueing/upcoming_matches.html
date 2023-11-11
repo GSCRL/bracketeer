@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block bodysections %}
+
+{% if not show_header %} <!-- URLarg, may not be included all the time. -->
+<section class="hero is-info">
+  <div class="hero-body">
+    <p class="title">
+      Upcoming Matches
+    </p>
+    {% if arena_settings.event_name %}
+    <p class="subtitle">
+      {{ arena_settings.event_name }} | bracket powered by <b>TrueFinals</b>
+    </p>
+    {% endif %}
+  </div>
+
+    {# This snippet is only applicable to multi-arena events.  This should avoid stuff breaking too egregiously. #}
+    {% if cages|length > 1 %}
+    <div class="hero-foot">
+    <nav class="tabs is-boxed is-fullwidth">
+      <div class="container">
+        <ul>
+          <li class="is-active">
+            <a>[All Cages]</a>
+          </li>
+          {# Iterate over all additional cages in the event we have more than 1. #}
+          {% for cage in cages %}
+            <li><a>{{ cage.name }} ({{ cage.id }})</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+    </nav>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="section">
+    {% if div_matches %}
+    <table class="table is-striped is-fullwidth">
+        <thead>
+          <tr>
+            {# This section distinctly needs work. #}
+            {% if cages %}
+              <th>Location</th>
+            {% endif %}
+            <th>Called Since</th>
+            <th>Match Info</th>
+            <th colspan="3">Red</th>
+            <th colspan="3">Blue</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for match in div_matches %}
+          <tr {% if 'calledSince' in match %} {% if match.calledSince != none %} {# class="is-link" #}{% endif %} {% endif %}>
+            <td> 
+
+
+            <span class="button is-small is-primary is-fullwidth">
+              <b id="called_since_{{ match.tournamentID }}_{{ match.id }} ">
+              {# This area is intentionally left blank. #}
+            </b>
+            </span>
+
+              {% if match.calledSince is not none %}
+              <script>
+                document.getElementById("called_since_{{ match.tournamentID }}_{{ match.id }} ").innerHTML = "Called " + time_ago( {{ match.calledSince }} );
+              </script>
+              {% else %}
+              <script>
+                document.getElementById("called_since_{{ match.tournamentID }}_{{ match.id }} ").innerHTML = "ACTIVE NOW";
+                document.getElementById("called_since_{{ match.tournamentID }}_{{ match.id }} ").parentElement.classList.replace('is-primary', 'is-danger');
+              </script>
+              {% endif %}
+            </td>
+
+            <td><b>{{ match.weightclass[:4].upper() }}-{{ match.name }}</b></td> 
+            <!-- This is the "Match Info" short code.  It's ugly but useful.-->
+
+            {% if match.state != "unavailable" %}
+              {% for competitor in match.slots %}
+              <!-- COmpetitor name for the current L-to-R iteration loop. -->
+              {% if competitor.bracketeer_player_data %}
+              <td colspan="2"><b>{{ competitor.bracketeer_player_data.name }}</b> </td>
+              {% else %}
+              <td colspan="2"><b>{{ competitor.playerID }}</b> </td>
+              {% endif %}
+
+              <td>  
+                  {% if competitor.bracketeer_player_data %}
+                    <div class="field is-grouped is-grouped-multiline">
+                      <div class="control">
+                      <b>
+                      <div class="tags has-addons">
+                        <span class="tag">WLT</span>
+                        <span class="tag is-primary is-light is-rounded">{{ competitor.bracketeer_player_data.wins }}</span>
+                        <span class="tag is-danger is-light is-rounded">{{ competitor.bracketeer_player_data.losses }}</span>
+                        <span class="tag is-warning is-light is-rounded">{{ competitor.bracketeer_player_data.ties }}</span>
+                        </div>
+                        </b>
+                      </div>
+                    </div>
+                {% endif %}
+              </td>
+              {% endfor %} <!-- closes competitor loop -->
+
+              {# Fancy catchall for unfinished / partially filled match. #}
+              {% if match.slots|length == 1 %} 
+              <td>
+                <i>waiting . . . </i>
+              </td>
+              {% endif %} <!-- closes out catchall for partially filled matches. -->
+
+            {% else %} <!-- catching for if a match has zero slots filled yet. -->
+            <td colspan=2>
+              <i>waiting . . . </i>
+              <div class="field is-grouped is-grouped-multiline">
+                <div class="control">
+                <div class="tags has-addons">
+                  <span class="tag">Advances from {{ match.weightclass }}</span>
+                  {% for slot in match.slots %}
+                  <span class="tag is-success is-light">
+                    {% if slot.gscrl_friendly_previous_name %}
+                      {{ slot.gscrl_friendly_previous_name }} 
+                    {% else %}
+                      {{ slot.prevGameID}}
+                    {% endif %}
+                  </span>
+                  {% endfor %}
+                </div>
+              </div>
+            </td>
+            {% endif %}
+          </tr>
+          {% endfor %} <!-- Closes loop for competitors in a given match.  Mostly a catch-all tbh.  -->
+        </tbody>
+      </table>
+
+    {% else %} <!-- catchall for no valid matches.  Usually happens at the start or end of an event.  -->
+          <p>There are no matches in the system called for fights.</p>
+          <p> Hang tight, we'll get to the robot carnage shortly!</p>
+          <p>🤖🦾🎆🧨</p>
+    {% endif %}
+  </section>
+{% endblock %}

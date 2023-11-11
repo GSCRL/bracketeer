@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block bodysections %}
+
+<!-- Event Name / Basic Settings -->
+<section class="section">
+    <div class="block">
+        <h2 class="subtitle">Event Settings</h2>
+    </div>
+    <div class="block">
+        <p>
+            <input class="input" type="text" id="gscrl_event_name" value="{{ arena_settings.event_name }}" placeholder="Event Name">
+        </p>
+    </div>
+    <div class="block">
+        <p>
+            <input class="input" type="text" id="gscrl_event_league" value="{{ arena_settings.event_league }}" placeholder="Event League">
+        </p>
+    </div>
+</section>
+
+<!-- Cage only metadata. -->
+<section class="section">
+    <div class="block">
+        <h2 class="subtitle">Cages</h2>
+    </div>
+    <div class="block">
+        <table class="table is-striped is-fullwidth">
+            <thead>
+                <th>Cage ID</th>
+                <th>Cage Name</th>
+            </thead>
+            <tbody>
+            {% for cage in arena_settings.tournament_cages %} {{ loop.counter }}
+                <tr>
+                    <td>
+                        <input class="input" type="number" id="return_cage_id_row_{{ loop.index }}" placeholder="{{ cage.id }}" value="{{ cage.id }}">
+                    </td>
+                    <td>                    
+                        <input class="input" type="text"  id="return_cage_name_row_{{ loop.index }}" placeholder="{{ cage.name }}" value="{{ cage.name }}">
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Event Tournament Setup -->
+<section class="section">
+    <div class="block">
+        <h2 class="subtitle">TrueFinals Tournaments</h2>
+    </div>
+    <div class="block">
+        <table class="table is-striped is-fullwidth">
+            <thead>
+                <th>Weightclass Name</th>
+                <th>TrueFinals Key</th>
+                <th>Weightclass (grams)</th>
+            </thead>
+            <tbody>
+            {% for tournament in arena_settings.tournament_keys %} {{ loop.counter }}
+                <tr>
+                    <td>
+                        <input class="input" type="text" id="return_tourneys_name_row_{{ loop.index }}" placeholder="{{ tournament.weightclass }}" value="{{ tournament.weightclass }}">
+                    </td>
+                    <td>                    
+                        <input class="input" type="text"  id="return_tourneys_tf_key_row_{{ loop.index }}" placeholder="{{ tournament.id }}" value="{{ tournament.id }}">
+                    </td>
+                    <td>                    
+                        <input class="input" type="number"  id="return_tourneys_weightclass_gms_row_{{ loop.index }}" placeholder="{{ tournament.weightInt }}" value="{{ tournament.weightInt }}">
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Event API Key Setup-->
+<section class="section">
+    <div class="block">
+        <h2 class="subtitle">TrueFinals API Keys</h2>
+    </div>
+    <div class="block">
+        <p>
+            <input class="input" type="text" id="truefinals_user_id" value="{{ arena_secrets.truefinals.user_id }}">
+        </p>
+    </div>
+    <div class="block">
+        <p>
+            <input class="input" type="text"  id="truefinals_api_key" value="{{ arena_secrets.truefinals.api_key }}">
+        </p>
+    </div>
+</section>
+     
+<!-- OBS Websocket Config-->
+<section class="section">
+    <div class="block">
+        <h2 class="subtitle">OBS-Websocket Config</h2>
+    </div>
+    {% for obs_ws_setup in arena_secrets.obs_ws %}
+    <div class="block">
+        <p>
+            <input class="input" type="text"  id="obs_ws_ip" value="{{ obs_ws_setup.uri }}" placeholder="URI (like 192.168.50.8)">
+        </p>
+    </div>
+    <div class="block">
+        <p>
+            <input class="input" type="text" id="obs_ws_friendly_name" value="{{ obs_ws_setup.friendly_name }}" placeholder="Friendly Name">
+        </p>
+    </div>
+    <div class="block">
+        <p>
+            <input class="input" type="text" id="obs_ws_api_token" value="{{ obs_ws_setup.token }}" placeholder="OBS WS Token (like dhfuisdhgfiusbnv)">
+        </p>
+    </div>
+    <div class="block">
+        <p>
+            <input class="input" type="text" id="obs_ws_api_scene" value="{{ obs_ws_setup.scene }}" placeholder="Scene Name">
+        </p>
+    </div>
+    {% endfor %}
+</section>
+
+
+{% endblock %}

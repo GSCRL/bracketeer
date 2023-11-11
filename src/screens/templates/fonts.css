@@ -1,0 +1,19 @@
+
+@font-face {
+    font-family: DSEG14;
+    src: url('{{url_for('user_screens.static', filename='DSEG14ModernMini-Bold.woff2')}}') format('woff2');
+}
+
+@font-face {
+    font-family: 'GlacialIndifference';
+    src: url('{{url_for('user_screens.static', filename='GlacialIndifference-Regular.woff')}}') format('woff');
+    font-style: normal;
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: 'GlacialIndifference';
+    src: url('{{url_for('user_screens.static', filename='GlacialIndifference-Bold.woff')}}') format('woff');
+    font-style: bold;
+    font-weight: 700;
+}

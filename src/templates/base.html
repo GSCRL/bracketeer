@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bracketeer {% if title %} | {{ title }} {% endif %}</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='bulma/css/bulma.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='fa/fontawesome-all.min.css')}}"/>
+    <script src="{{url_for('static', filename='socket.io.min.js')}}"></script> 
+  </head>
+  <body>
+    {% if autoreload %}
+    <script>
+      setTimeout(
+        function() {
+          location.reload(); 
+        }, {{autoreload}}
+        );
+      </script>
+    {% endif %}
+
+    {% if not show_header %}
+    <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+      {# navbar menu antics for actually having submenus in the nav.  https://codepen.io/lublak/pen/mdmEdKN #}
+      <div class="navbar-brand">
+        <a class="navbar-item" href="/">
+          <img src="/static/bracketeer_logo.svg" alt="Bracketeer logo SVG, a depiction of a tournament bracket rotated 90 degrees, forming the implicit shape of a trophy."/>
+
+          <h1><b><span class="is-hidden-touch"> Bracketeer</span></b></h1>
+        </a>
+    
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbar-main">
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </a>
+      </div>
+    
+      <div id="navbar-main" class="navbar-menu">
+        <div class="navbar-start">
+
+          <div class="navbar-item has-dropdown is-hoverable">
+            <a class="navbar-link">
+              Match Control
+            </a>
+    
+            <div class="navbar-dropdown">
+              {% for cage in arena_settings.tournament_cages %}
+              <!--<a href="/screens/{{cage.id}}/judges" class="navbar-item">
+                Cage {{ cage.id }} ({{ cage.name }})
+              </a>-->
+              <a href="/control/{{cage.id}}" class="navbar-item">
+                Timer Control {{ cage.id }} ({{ cage.name }})
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="navbar-item has-dropdown is-hoverable">
+            <a class="navbar-link">
+              Competitors
+            </a>
+    
+            <div class="navbar-dropdown">
+              {% for cage in arena_settings.tournament_cages %}
+              <hr class="navbar-divider">
+              <div class="navbar-item" disabled>
+                🏛️ Cage {{ cage.id }} | {{ cage.name }}
+              </div>
+              <hr class="navbar-divider">
+              <a href="/screens/{{cage.id}}/timer/red" class="navbar-item">
+                🔴 | Red Robot
+              </a>
+              <a href="/screens/{{cage.id}}/timer/blue" class="navbar-item">
+                🔵 | Blue Robot
+              </a>
+              <hr class="navbar-divider">
+              <a href="/screens/{{cage.id}}/timer" class="navbar-item">
+                ⏲️ | Big Timer
+              </a>
+              <a href="/screens/{{cage.id}}/judges" class="navbar-item">
+                📋 | Judge's View
+              </a>
+
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="navbar-item has-dropdown is-hoverable">
+            <a class="navbar-link">
+              Queueing
+            </a>
+    
+            <div class="navbar-dropdown">
+              <hr class="navbar-divider">
+              <a href="/matches/upcoming?autoreload=30000" class="navbar-item">
+                Next Up
+              </a>
+              <a href="/matches/upcoming?autoreload=30000&show_header=False" class="navbar-item">
+                Next Up (Hidden Menubars)
+              </a>
+              <hr class="navbar-divider">
+              <a href="/matches/completed?autoreload=30000" class="navbar-item">
+                Completed Fights
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="navbar-end">
+          <div class="navbar-item">
+            <div class="field is-grouped">
+              <p class="control">
+                <a class="button" href="/settings">
+                  <span>Settings</span>
+                </a>
+              </p>
+
+              <p class="control">
+                <a class="button is-danger" onclick="sendESTOP();">
+                  <span>
+                    eSTOP
+                  </span>
+                </a>
+              </p>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    {% endif %}
+
+<script>
+   document.addEventListener('DOMContentLoaded', () => {
+
+// Get all "navbar-burger" elements
+const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+// Add a click event on each of them
+$navbarBurgers.forEach( el => {
+  el.addEventListener('click', () => {
+
+    // Get the target from the "data-target" attribute
+    const target = el.dataset.target;
+    const $target = document.getElementById(target);
+
+    // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+    el.classList.toggle('is-active');
+    $target.classList.toggle('is-active');
+
+  });
+});
+
+});
+</script>
+<script type="text/javascript" charset="utf-8">
+    var socket = io();
+
+    // rejoin if there's a disconnect
+    {% if cageID %}
+      socket.emit(
+      "join_cage_request", 
+      {
+        'cage_id': {{ cageID }} 
+      }
+    )
+    {% endif %}
+
+    function sendESTOP() {
+      socket.emit("globalESTOP");
+    }
+    
+</script>
+
+
+<script>
+  function time_ago(time) {
+  
+  switch (typeof time) {
+    case 'number':
+      break;
+    case 'string':
+      time = +new Date(time);
+      break;
+    case 'object':
+      if (time.constructor === Date) time = time.getTime();
+      break;
+    default:
+      time = +new Date();
+  }
+  var time_formats = [
+    [60, 'seconds', 1], // 60
+    [120, '1 minute ago', '1 minute from now'], // 60*2
+    [3600, 'minutes', 60], // 60*60, 60
+    [7200, '1 hour ago', '1 hour from now'], // 60*60*2
+    [86400, 'hours', 3600], // 60*60*24, 60*60
+    [172800, 'Yesterday', 'Tomorrow'], // 60*60*24*2
+    [604800, 'days', 86400], // 60*60*24*7, 60*60*24
+    [1209600, 'Last week', 'Next week'], // 60*60*24*7*4*2
+    [2419200, 'weeks', 604800], // 60*60*24*7*4, 60*60*24*7
+    [4838400, 'Last month', 'Next month'], // 60*60*24*7*4*2
+    [29030400, 'months', 2419200], // 60*60*24*7*4*12, 60*60*24*7*4
+    [58060800, 'Last year', 'Next year'], // 60*60*24*7*4*12*2
+    [2903040000, 'years', 29030400], // 60*60*24*7*4*12*100, 60*60*24*7*4*12
+    [5806080000, 'Last century', 'Next century'], // 60*60*24*7*4*12*100*2
+    [58060800000, 'centuries', 2903040000] // 60*60*24*7*4*12*100*20, 60*60*24*7*4*12*100
+  ];
+  var seconds = (+new Date() - time) / 1000,
+    token = 'ago',
+    list_choice = 1;
+  
+  if (seconds == 0) {
+    return 'Just now'
+  }
+  if (seconds < 0) {
+    seconds = Math.abs(seconds);
+    token = 'from now';
+    list_choice = 2;
+  }
+  var i = 0,
+    format;
+  while (format = time_formats[i++])
+    if (seconds < format[0]) {
+      if (typeof format[2] == 'string')
+        return format[list_choice];
+      else
+        return Math.floor(seconds / format[2]) + ' ' + format[1] + ' ' + token;
+    }
+  return time;
+  }
+  
+  </script>
+  
+
+<!-- Start Body Block from base.html -->
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <div class="section">
+    <ul class=flashes>
+      {% for message in messages %}
+  
+      <article class="message is-danger">
+        <div class="message-header">
+          <p>Danger</p>
+          <button class="delete" aria-label="delete"></button>
+        </div>
+        <div class="message-body">
+          {{ message }}
+        </div>
+      </article>
+      {% endfor %}
+      </ul>
+  </div>
+  {% endif %}
+{% endwith %}
+
+{% block bodysections %}
+
+{% endblock %}
+<!-- end baseblock from base.html. -->
+
+    {# Safety for flashing during a 500 err. #}
+    {% if errormsg %}
+      <h1 class="title is-1">:(</h1>
+      <h3 class="title is-2">{{ errormsg }}</h3>
+    {% endif %}
+
+    
+  </body>
+</html>

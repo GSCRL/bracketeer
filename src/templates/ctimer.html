@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+
+{% block bodysections %}
+<script src="{{url_for('static', filename='easytimer.min.js')}}"></script>
+    
+<script>
+  var cageID = {{ cageID }};
+  var match_duration_timestamp = 150;
+  var mid_match_warning_timestamp = 30; // this is based on brief player survey.  may change.
+  var warn_midmatch = false;
+
+  socket.emit(
+    "join_cage_request", 
+    {
+      'cage_id': {{ cageID }} 
+    }
+  )
+  socket.emit('client_attests_existence', {'location': window.location.href});
+  // we use this to add a client to the room of peripherals that require pre-rendered schedule updates.  This is likely to be the only place it's used.
+  socket.emit('client_notify_schedule', 'tell me please!');
+
+  socket.on("schedule_data", (schedule_rendered) => {
+    var temp = document.getElementById("button_spinny_helper");
+        if (temp !== null) {
+          temp.classList.remove("is-loading");
+          console.log("Removed spinner.");
+        }
+
+    // below is to do the client-side calculation of time-since a match being called.
+    // we have to post-hook the partial re-render.
+    // this is probably easier in full-butt JS stuff. Augh.
+
+    document.getElementById("matches_result_location").innerHTML = schedule_rendered;
+
+    var called_since_updates = document.getElementsByClassName("called_since");
+    //console.log(called_since_updates);
+      for (item in called_since_updates) {
+        //console.log((typeof(called_since_updates[item])));
+        // for some reason, the results are ALWAYS:
+        // (the actual items)
+        // some other stuff.
+        // some other stuff.
+        // We only want whatever the first type is or it errors out horridly.
+
+        if ((typeof(called_since_updates[item])) == typeof(called_since_updates[0])) {
+          var _timestamp_called_of_match = called_since_updates[item].getAttribute('id').replace("called_since_","");
+          console.log(_timestamp_called_of_match, typeof(_timestamp_called_of_match));
+          var _timestamp_parent_item = document.getElementById(_timestamp_called_of_match);
+
+          var timestamps = Number(_timestamp_parent_item.innerHTML);
+          called_since_updates[item].innerHTML = "Called " + time_ago(timestamps);
+        }
+      }
+    });
+
+  /* HELPERS FOR EMITTING MESSAGES */
+function load_competitors_names(red_name, blue_name) {
+
+  // we get the-inline variable PTR so we don't need to specifically worry about them, and then specialcase `span` and `input` types.
+  var red_temp = document.getElementById(red_name)
+  var blue_temp = document.getElementById(blue_name)
+
+    // Tags do not have a `value`, just a `valueOf()` that doesn't do what we want.  SO we just specialcase it.
+    if (red_temp.localName === "span") {
+      var red_placeholder = red_temp.innerText;
+      var blue_placeholder = blue_temp.innerText;
+    } else {
+      // used for the input tag as a fallback case.
+      var red_placeholder = red_temp.value;
+      var blue_placeholder = blue_temp.value;
+    }
+   socket.emit('robot_match_color_name', cageID=cageID, red_name = red_placeholder, blue_name=blue_placeholder);
+}
+
+  function refresh_schedule_please() {
+        var temp = document.getElementById("button_spinny_helper");
+        if (temp !== null) {
+          temp.classList.add("is-loading");
+          console.log("added spinner CSS.");
+        }
+        socket.emit('client_requests_schedule');
+        // a lil stub, just for us.
+    }
+
+  function generateTimerMessage(message) {
+    return {
+      'cageID': cageID,
+      'message': message
+    };
+  }
+
+  function generateBackgroundMessage(color) {
+    return {
+      'color': color,
+      'cageID':cageID
+    }
+  }
+
+  function readyup(botColor) {
+      socket.emit('player_ready', {'playerColor': botColor, "cageID": {{ cageID }} });
+
+      if (botColor === "red") {
+          document.getElementById("redisready").innerText = "RED READY";
+      }
+
+      if (botColor === "blue") {
+          document.getElementById("blueisready").innerText = "RED READY";
+      }
+  }
+
+  var timerInstance = new easytimer.Timer({countdown: true, startValues: {seconds: match_duration_timestamp + 0.9}, precision: 'secondTenths' });
+  var countdownTimer = new easytimer.Timer({countdown: true, startValues: {seconds: 4.5}, precision: 'secondTenths' });
+
+countdownTimer.addEventListener('targetAchieved', function (e) {
+  timerInstance.start();
+});
+
+function send_padded_timer_msg(time_in_seconds) {
+  if (time_in_seconds.length < 3) {
+    time_in_seconds = time_in_seconds.padStart(3, "0"); 
+  }
+  
+  set_control_timer_value(time_in_seconds);
+  socket.emit("timer_event", generateTimerMessage(time_in_seconds));
+}
+
+// USED FOR SOUND PLAYING EVENTS ONLY.
+var hasPlayedMatchStart = false;
+var hasPlayedMatchEnd = false;
+var hasPlayedMidMatchWarning = false;
+
+countdownTimer.addEventListener('secondTenthsUpdated', function (e) {
+  var time_in_seconds = (countdownTimer.getTimeValues().seconds + (countdownTimer.getTimeValues().minutes * 60)).toString(); // used to send message and not much else.
+  var countdown_timer_value = (countdownTimer.getTimeValues().seconds + (countdownTimer.getTimeValues().minutes * 60) + (.1 * countdownTimer.getTimeValues().secondTenths));
+
+  // match start sound duration is 3.5s.
+  // match end duration doesn't matter.
+  swapHeartbeatSignStatus();
+  //console.log((countdownTimer.getTimeValues().seconds + (.1 * countdownTimer.getTimeValues().secondTenths)));
+
+  if (countdown_timer_value < 3.8) {
+    if (!hasPlayedMatchStart) {
+      hasPlayedMatchStart = true;
+      socket.emit("c_play_sound_event", {'cageID': cageID, 'sound': 'start_match'});
+      console.log("tried to play match start sound.");
+    }
+  }
+  send_padded_timer_msg(time_in_seconds);
+});
+
+timerInstance.addEventListener('secondTenthsUpdated', function (e) { 
+  var time_in_seconds = (timerInstance.getTimeValues().seconds + (timerInstance.getTimeValues().minutes * 60)).toString();
+  var match_timer_value = (timerInstance.getTimeValues().seconds + (timerInstance.getTimeValues().minutes * 60) + (.1 * timerInstance.getTimeValues().secondTenths));
+  swapHeartbeatSignStatus(); 
+  send_padded_timer_msg(time_in_seconds);
+
+  if (match_timer_value < 0.5) {
+    if (!hasPlayedMatchEnd) {
+      hasPlayedMatchEnd = true;
+      socket.emit("c_play_sound_event", {'cageID': cageID, 'sound': 'end_match'});
+      console.log("tried to play match end sound.");
+    }
+  }
+    //console.log(timerInstance.getTimeValues().seconds + (.1 * timerInstance.getTimeValues().secondTenths));
+    
+    if (warn_midmatch) {
+      if (match_timer_value < mid_match_warning_timestamp) {
+            console.log(timerInstance.getTimeValues().seconds);
+            console.log(mid_match_warning_timestamp);
+            if (!hasPlayedMidMatchWarning) {
+              hasPlayedMidMatchWarning = true;
+              socket.emit("c_play_sound_event", {'cageID': cageID, 'sound': 'mid_match_chime'});
+              console.log("tried to play match mid-bell sound.");
+            }
+      }
+    }
+
+});
+
+function set_control_timer_value(timer_value) {
+  document.getElementById("timer_control_counter").innerHTML = timer_value;
+}
+
+// well that's easier.  
+// The toggle function adds a class to an item if not present, removes it if it is.
+// exactly what we need, so this is just a wrapper.  Ope!
+function swapHeartbeatSignStatus() {
+  document.getElementById("heartbeat_button_id").classList.toggle("is-danger");
+}
+
+/* Timer Control Stubs */
+function startTimer() {
+    if (!timerInstance.isRunning() && (!countdownTimer.isRunning())) {
+      if (timerInstance.isPaused()) {
+        timerInstance.start(); // resume condition.
+      } else {
+        countdownTimer.start();
+        //socket.emit("timer_bg_event", generateBackgroundMessage("rgb(37, 37, 37)")); 
+        //socket.emit("timer_event", generateTimerMessage(match_duration.toString()));
+      }
+    }
+
+}
+function pauseTimer() {
+  if (!countdownTimer.isPaused()) {
+    countdownTimer.pause();
+  } 
+  if (!timerInstance.isPaused()) {
+    timerInstance.pause();
+  }
+}
+
+function resetBG() {
+  socket.emit("timer_bg_event", generateBackgroundMessage("rgb(37, 37, 37)"));
+  var matches_sidebar = document.getElementsByClassName('panel-heading');
+
+  if (matches_sidebar.length > 0) {
+    if (matches_sidebar[0] !== null) {
+      matches_sidebar[0].style.backgroundColor = "rgb(37, 37, 37)";
+    }
+  }
+}
+
+function stopTimer() {
+  document.getElementById("timer_control_counter").innerText = match_duration_timestamp.toString();
+  socket.emit("timer_event", generateTimerMessage(match_duration_timestamp.toString()));
+  resetBG(); // this gets rid of the eSTOP red bg.
+
+  timerInstance.reset();
+  countdownTimer.reset();
+
+  timerInstance.stop();
+  countdownTimer.stop();
+
+  resetTeamReadies();
+
+  hasPlayedMatchStart = false;
+  hasPlayedMatchEnd = false;
+  hasPlayedMidMatchWarning = false;
+}
+
+document.addEventListener("keypress", function(event) {
+		if (event.code == "Space") {
+      if (timerInstance.isRunning() || countdownTimer.isRunning()) {
+        stopTimer();
+        eSTOP();
+      }
+		}
+});
+
+function change_colors() {
+  document.getElementById('color_picker_label').click();
+  var coloring = document.getElementById('hidden_color_picker');
+  coloring.click();
+  socket.emit("timer_bg_event", generateBackgroundMessage(coloring.value));
+
+  var matches_sidebar = document.getElementsByClassName('panel-heading');
+  if (matches_sidebar) {
+    if (matches_sidebar[0] !== null) {
+      matches_sidebar[0].style.backgroundColor = coloring.value;
+    }
+  }
+}
+
+function eSTOP() {
+  stopTimer();
+  resetTeamReadies();
+  socket.emit("timer_event", generateTimerMessage("STOP"));
+  socket.emit("timer_bg_event", generateBackgroundMessage("red"));
+}
+
+// changes the state of the readies for next.
+function resetTeamReadies() {
+  resetTeamReadyButtons();
+  document.getElementById("redisready").innerText = "NOT READY";
+  document.getElementById("blueisready").innerText = "NOT READY";
+}
+
+// set the timer display for ready / not ready.  just an indicator status.
+socket.on("control_player_ready_event", (station_info) => {
+  console.log(station_info);
+  if (station_info.playerColor === "red") {
+      document.getElementById("redisready").innerText = "[READY]";
+  }
+
+  if (station_info.playerColor === "blue") {
+      document.getElementById("blueisready").innerText = "[READY]";
+  }
+});
+
+// in the event of a tapout, tell arena controls who wins automagically.
+// This is not used in the version past 2024/11/02 (KC.)
+/*
+socket.on("control_player_tapout_event", (station_info) => {
+  stopTimer();
+  if (station_info.playerColor === "red") {
+      document.getElementById("redisready").innerText = "[TAPOUT]";
+      document.getElementById("blueisready").innerText = "[WIN]";
+      socket.emit("timer_event", generateTimerMessage("TAPOUT<br>BLUE WINS"));
+      socket.emit("timer_bg_event", generateBackgroundMessage("blue")); 
+  }
+
+  if (station_info.playerColor === "blue") {
+      document.getElementById("blueisready").innerText = "[TAPOUT]";
+      document.getElementById("redisready").innerText = "[WIN]";
+      socket.emit("timer_event", generateTimerMessage("TAPOUT<br>RED WINS"));
+      socket.emit("timer_bg_event", generateBackgroundMessage("red")); 
+  }
+});
+*/
+
+function resetTeamReadyButtons() {
+  socket.emit("reset_screen_states", {'cageID': cageID });
+}
+
+function sendTimerMessage() {
+  socket.emit("timer_event", 
+  generateTimerMessage( // we use this to encapsulate the message with per-cage information for the server to send out.  semi-trusted clients I guess.
+    (
+      document.getElementById("sendmessagebox").value)  //.replace("!", "¦").replace(" ", "!") // this is sugar to make it render in DSEG font properly.  
+    )
+  );
+  // This is to reformat the string on the fly to comply with the DSEG14 oddities.
+  // still worth it - k.
+  // https://www.keshikan.net/fonts-e.html
+}
+
+function manualTimerInput() {
+  timerInstance.stop();
+  var timer_value = parseFloat(prompt("Enter manual timer value.  Timer will be paused upon confirmation."));
+  console.log(timer_value);
+  if ((timer_value !== null) && (!isNaN(timer_value))) {
+    timerInstance.start({ startValues:{seconds: timer_value}});
+    set_control_timer_value(timer_value);
+  }
+  pauseTimer();
+}
+
+</script>
+
+<label id="color_picker_label" for="hidden_color_picker" style="display:none;"></label>
+<input type="color" id="hidden_color_picker" style="display:none;" onchange="change_colors();">
+
+<section class="section">
+    <div class="container">
+      <h1 class="title">
+        Match Timer (Cage {{ cageID }})
+      </h1>
+      <p class="subtitle">
+        (only one instance of this page can be open)
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="columns"> 
+      <div class="column"> <!-- left column original -->
+        <div class="block">
+          <style>
+            .third-widths {
+              width: 33%;
+            }
+          </style>
+            <div class="buttons has-addons is-fullwidth">
+                <button class="button is-danger is-light is-large third-widths" id="redisready" onclick="readyup('red');">NOT READY</button>
+                <button id="heartbeat_button_id" class="button is-large is-danger third-widths" disabled>[HB]</button>
+                <button class="button is-info is-light is-large third-widths" id="blueisready" onclick="readyup('blue');">NOT READY</button>
+            </div>
+        </div>
+
+        <div class="block">
+          <div class="buttons has-addons is-fullwidth">
+            <style>
+              .fifth-widths {
+                width: 20%;
+              }
+            </style>
+            <button class="button is-large is-dark fifth-widths" id="timer_control_counter" onclick="manualTimerInput();">000</button>
+            <button class="button is-large fifth-widths" onclick="startTimer();">Start▶️</button>
+            <button class="button is-large fifth-widths" onclick="pauseTimer();">Pause⏸️</button>
+            <button class="button is-large fifth-widths"  onclick="stopTimer();">Stop⏹️</button>
+            <button class="button is-large fifth-widths"  onclick="manualTimerInput();">Change🖩</button>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="field has-addons">
+            <p class="control is-expanded">
+              <script>
+                // we use this to send a message when doing stuff.
+                function search(ele) {
+                  if(event.key === 'Enter') {
+                      sendTimerMessage();
+                      document.getElementById("sendmessagebox").value = ""; // we want to clear the contents.    
+                  }
+                }
+              </script>
+              <input class="input" id="sendmessagebox" type="text" placeholder="Status message to send on screens." onkeydown="search(this)">
+            </p>
+            <p class="control">            
+              <a class="button is-info is-light" onclick="sendTimerMessage();">
+                ⟫
+              </a>
+            </p>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="buttons">
+            <script>
+              function _hidden_test_sound() {
+                socket.emit("c_play_sound_event", {'cageID': cageID, 'sound': 'mid_match_chime'});
+              }
+
+              function _hidden_hide_timer() {
+                socket.emit("timer_event", generateTimerMessage(""));
+              }
+              function _hidden_cage_safe() {
+                socket.emit("timer_bg_event", generateBackgroundMessage("lightgreen"));
+              }
+
+              function _hidden_cage_unsafe() {
+                socket.emit("timer_bg_event", generateBackgroundMessage("red"));
+              }
+              
+            </script>
+            <button class="button is-large is-dark" onclick="_hidden_test_sound()">Sound Test</button>
+            <button class="button is-large is-dark" onclick="_hidden_hide_timer()">Hide Timer</button>
+            <button class="button is-large is-dark" onclick="_hidden_cage_unsafe()">Set Cage UNSAFE</button>
+            <button class="button is-large is-dark" onclick="_hidden_cage_safe()">Set Cage SAFE</button>
+
+          </div>
+        </div>
+      </div> <!-- column end -->
+
+      <div class="column" id="matches_result_location"> <!-- matches column.-->
+
+      </div> <!-- end column matches. -->
+
+    </div> <!-- columns end -->
+  </section>
+
+  <script>
+    stopTimer();
+    socket.emit('client_requests_schedule'); // testing.  Here's hoping it works.
+  </script>
+{% endblock %}

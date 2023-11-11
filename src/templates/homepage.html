@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block bodysections %}
+
+{% if not show_header %} <!-- URLarg, may not be included all the time. -->
+<section class="hero is-info is-small">
+  <div class="hero-body">
+    <p class="title">
+      Welcome to Bracketeer.
+    </p>
+    <p class="subtitle">
+        <ul>
+            <li>
+                <i>bracket (n) - a mechanism to play through tournaments, usually competitively.</i>
+            </li>
+            <li>
+                <i>
+                    -eer - (suffix) one who does.
+                </i>
+            </li>
+        </ul>
+       
+
+    </p>
+  </div>
+
+    <div class="hero-foot">
+    <nav class="tabs is-boxed is-fullwidth">
+      <div class="container">
+      </div>
+    </nav>
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+    <div class="content">
+        <h2>Match Control</h2>
+            <p>
+                This is where the production crew can run the timers for matches for a given cage/arena.
+            </p>
+    </div>
+
+    <div class="content">
+        <h2>Competitors</h2>
+            <p>
+                This is where views that competitors or judges would normally interact with (timers, ready-up views, etc.)
+            </p>
+    </div>
+
+    <div class="content">
+        <h2>Queueing</h2>
+            <p> This is views relating to helping get competitors to their next match faster and to avoid questions that can be answered at a glance.</p>
+    </div>
+    
+  <hr>
+
+    <div class="content">
+        <h2>Help</h2>
+            <p>This is information that might help you understand how better to use Bracketeer and how to recover from errrors, mistakes, or oddities that can be improved on.</p>
+    </div>
+</section>
+
+{% endblock %}
