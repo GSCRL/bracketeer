@@ -86,7 +86,15 @@
                         {{ match.activeSince }}
                     {% endif %}
                 </div>
-                <span class="button {% if match.calledSince is not none %}is-warning{% elif match.ActiveSince is not none %}is-danger{% endif %} called_since" id="called_since_{{ match.tournamentID }}_{{ match.id }}" {% if match.activeSince is not none %}title="Active state, called the title ago."{% elif match.calledSince is not none %}title="Called, competitors should be ready."{% endif %}></span>
+
+                <div class="field is-grouped">
+                    {% if match.calledSince is not none %}
+                    {# Test . #}
+                {% elif match.activeSince is not none %}
+                    <b class="button is-danger">[!]</b>
+                {% endif %}
+                    <span class="button {% if match.calledSince is not none %}is-warning{% elif match.ActiveSince is not none %}is-danger{% endif %} called_since" id="called_since_{{ match.tournamentID }}_{{ match.id }}" {% if match.activeSince is not none %}title="Active state, called the title ago."{% elif match.calledSince is not none %}title="Called, competitors should be ready."{% endif %}></span>
+                </div>                
             </div>
 
             <div class="level-right">
