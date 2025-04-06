@@ -10,7 +10,7 @@ import logging
 # an error state.
 from httpx import Client
 
-from config import secrets as arena_secrets
+from src.config import secrets as arena_secrets
 
 tf_api_session = Client()
 # This caches the items less likely to change (if at all during the

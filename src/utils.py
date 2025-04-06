@@ -1,7 +1,7 @@
-from flask import flash, Response
+from pathlib import Path
 
 from dynaconf import Dynaconf
-from pathlib import Path
+from flask import Response, flash
 
 secrets = Dynaconf(envvar_prefix="DYNACONF", settings_files=[Path(".secrets.json")])
 

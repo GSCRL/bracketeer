@@ -1,14 +1,11 @@
+import logging
 from time import time
 
-
-from config import settings as arena_settings
-from api_truefinals.cached_api import (
-    TrueFinalsTournamentsPlayers,
-    getAllGames,
-    getAllPlayersInTournament,
-    getEventLocations,
-)
-import logging
+from src.api_truefinals.cached_api import (TrueFinalsTournamentsPlayers,
+                                           getAllGames,
+                                           getAllPlayersInTournament,
+                                           getEventLocations)
+from src.config import settings as arena_settings
 
 # used for player lookup to avoid rebuilding constantly.  Should be faster.
 

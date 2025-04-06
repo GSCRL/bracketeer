@@ -1,8 +1,6 @@
 from pprint import pprint
 
-from api_truefinals.cached_wrapper import (
-    getAllTournamentsMatchesSimple,
-)
+from api_truefinals.cached_wrapper import getAllTournamentsMatchesSimple
 
 # logging.basicConfig()
 # logging.getLogger().setLevel(logging.INFO)

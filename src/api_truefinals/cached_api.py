@@ -1,15 +1,13 @@
 import logging
-
 # Text type is VarChar without limit, probably fine?
 from time import time
 
 from piccolo.columns import JSON, UUID, BigInt, Boolean, Text
 from piccolo.engine.sqlite import SQLiteEngine
-
 # ORM Test, ty Devyn.
 from piccolo.table import Table
 
-from api_truefinals.api import makeAPIRequest
+from src.api_truefinals.api import makeAPIRequest
 
 lru_DB = SQLiteEngine(path="tf_lru.sqlite")
 

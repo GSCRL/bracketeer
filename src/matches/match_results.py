@@ -1,9 +1,8 @@
 from flask import Blueprint, jsonify, render_template, request
 
-from api_truefinals.cached_wrapper import (
-    getAllTournamentsMatchesWithPlayers,
-)
-from util.wrappers import ac_render_template
+from src.api_truefinals.cached_wrapper import \
+    getAllTournamentsMatchesWithPlayers
+from src.util.wrappers import ac_render_template
 
 match_results = Blueprint(
     "match_results", __name__, static_folder="./static", template_folder="./templates"
