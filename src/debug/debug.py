@@ -1,4 +1,5 @@
-from flask import Blueprint, Response, redirect, render_template, jsonify
+from flask import Blueprint, Response, jsonify, redirect, render_template
+
 from src.matches.match_results import _json_api_stub
 
 debug_pages = Blueprint(
@@ -17,6 +18,7 @@ def _debug_requests():
         .output(load_json=True)
         .run_sync()
     )
+
 
 # This fails if there's no API keys present.
 # Need to work on better error handling / exposure.
