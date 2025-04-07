@@ -6,7 +6,7 @@ from flask_socketio import SocketIO, emit, join_room, rooms
 from src.debug.debug import debug_pages
 from src.matches.match_results import _json_api_stub, match_results
 from src.screens.user_screens import user_screens
-from src.util.wrappers import ac_render_template, websocket_constructor
+from src.util.wrappers import SocketIOHandlerConstruction, ac_render_template
 from src.utils import runtime_err_warn
 
 logging.basicConfig(level="INFO")
@@ -18,7 +18,7 @@ app.register_blueprint(user_screens, url_prefix="/screens")
 app.register_blueprint(match_results, url_prefix="/matches")
 app.register_blueprint(debug_pages, url_prefix="/debug")
 
-temp = websocket_constructor(socketio)
+temp = SocketIOHandlerConstruction(socketio)
 
 
 @app.route("/")

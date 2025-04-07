@@ -16,9 +16,25 @@ def ac_render_template(template: str, **kwargs):
 
 from flask import Flask, jsonify, render_template, request
 from flask_socketio import SocketIO, emit, join_room, rooms
+from piccolo.columns import JSON, UUID, BigInt, Boolean, Text
+from piccolo.engine.sqlite import SQLiteEngine
+from piccolo.table import Table
+
+from src.api_truefinals.api import makeAPIRequest
+
+bracketeer_clients = SQLiteEngine(path="bracketeer_clients.sqlite")
 
 
-class websocket_constructor:
+class BracketeerClients(Table, db=bracketeer_clients):
+    id = UUID(primary_key=True)
+    sid = Text()
+    information = JSON()
+
+
+BracketeerClients.create_table(if_not_exists=True).run_sync()
+
+
+class SocketIOHandlerConstruction:
     def __init__(self, socketio):
         @socketio.on("disconnect")
         def disconnect_handler():
@@ -39,7 +55,18 @@ class websocket_constructor:
         # Wrapper to take note of clients as they connect/reconnect to store in above so we can keep track of their current page.
         @socketio.on("exists")
         def state_client_exists():
-            pass
+            find_resp = (
+                BracketeerClients.select()
+                .where(BracketeerClients.sid == request.sid)
+                .output(load_json=True)
+            ).run_sync()
+
+            if len(find_resp) == 0:
+                BracketeerClients.insert(
+                    BracketeerClients(sid=request.sid, information=request)
+                ).run_sync()
+
+            emit("arena_query_location", to=request.sid)
 
         @socketio.on("globalESTOP")
         def global_safety_eSTOP():
