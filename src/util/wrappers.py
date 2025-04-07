@@ -20,7 +20,6 @@ from piccolo.columns import JSON, UUID, Text
 from piccolo.engine.sqlite import SQLiteEngine
 from piccolo.table import Table
 
-
 bracketeer_clients = SQLiteEngine(path="bracketeer_clients.sqlite")
 
 

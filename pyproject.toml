@@ -21,3 +21,6 @@ dev = [
     "pyproject-autoflake>=1.0.2",
     "ruff>=0.11.4",
 ]
+
+[tool.ruff.lint]
+select = ["F401", "I", "PERF", "YTT", "ANN"]
