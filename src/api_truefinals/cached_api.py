@@ -1,9 +1,11 @@
 import logging
+
 # Text type is VarChar without limit, probably fine?
 from time import time
 
 from piccolo.columns import JSON, UUID, BigInt, Boolean, Text
 from piccolo.engine.sqlite import SQLiteEngine
+
 # ORM Test, ty Devyn.
 from piccolo.table import Table
 

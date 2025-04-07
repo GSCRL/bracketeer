@@ -1,7 +1,7 @@
 import logging
 
-from flask import Flask, jsonify, render_template, request
-from flask_socketio import SocketIO, emit, join_room, rooms
+from flask import Flask, jsonify, request
+from flask_socketio import SocketIO
 
 from matches.match_results import _json_api_stub, match_results
 from screens.user_screens import user_screens

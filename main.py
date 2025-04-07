@@ -1,10 +1,10 @@
 import logging
 
-from flask import Flask, jsonify, render_template, request
-from flask_socketio import SocketIO, emit, join_room, rooms
+from flask import Flask, request
+from flask_socketio import SocketIO
 
 from src.debug.debug import debug_pages
-from src.matches.match_results import _json_api_stub, match_results
+from src.matches.match_results import match_results
 from src.screens.user_screens import user_screens
 from src.util.wrappers import SocketIOHandlerConstruction, ac_render_template
 from src.utils import runtime_err_warn

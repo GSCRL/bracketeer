@@ -14,15 +14,20 @@ def ac_render_template(template: str, **kwargs):
     )
 
 
-from flask import Flask, jsonify, render_template, request
-from flask_socketio import SocketIO, emit, join_room, rooms
-from piccolo.columns import JSON, UUID, BigInt, Boolean, Text
+from flask import render_template, request
+from flask_socketio import emit, join_room, rooms
+from piccolo.columns import JSON, UUID, Text
 from piccolo.engine.sqlite import SQLiteEngine
 from piccolo.table import Table
 
-from src.api_truefinals.api import makeAPIRequest
 
 bracketeer_clients = SQLiteEngine(path="bracketeer_clients.sqlite")
+
+
+# This is used to handle message registration in a "mutable" way, since
+#  it's returned to the global state as an object.  The decorators still
+#  work async as intended I *believe* and it's very unlikely to have
+# anything race.
 
 
 class BracketeerClients(Table, db=bracketeer_clients):

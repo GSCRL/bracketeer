@@ -1,4 +1,4 @@
-from flask import Blueprint, Response, jsonify, redirect, render_template
+from flask import Blueprint, jsonify
 
 from src.matches.match_results import _json_api_stub
 
