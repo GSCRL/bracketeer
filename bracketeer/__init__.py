@@ -3,6 +3,7 @@ import logging
 from flask import Flask, jsonify, request
 from flask_socketio import SocketIO
 
+from debug.debug import debug_pages
 from matches.match_results import _json_api_stub, match_results
 from screens.user_screens import user_screens
 from util.wrappers import ac_render_template
@@ -15,6 +16,7 @@ app = Flask(__name__, static_folder="static", template_folder="templates")
 
 app.register_blueprint(user_screens, url_prefix="/screens")
 app.register_blueprint(match_results, url_prefix="/matches")
+app.register_blueprint(debug_pages, url_prefix="/debug")
 
 app.config["SECRET_KEY"] = "secret secret key (required)!"
 socketio = SocketIO(app)
