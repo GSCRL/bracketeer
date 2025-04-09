@@ -11,7 +11,7 @@ debug_pages = Blueprint(
 )
 
 
-@debug_pages.route("/timer_duration.json")
+@debug_pages.route("/durations.json")
 def _match_duration():
     match_dur = 150
     countdown_dur = 3

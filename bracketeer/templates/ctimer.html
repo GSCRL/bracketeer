@@ -2,17 +2,38 @@
 
 {% block bodysections %}
 <script src="{{url_for('static', filename='easytimer.min.js')}}"></script>
-    
+<script src="{{url_for('static', filename='xhr_helper.js')}}"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
 <script>
   var cageID = {{ cageID }};
-  var match_duration_timestamp = 150;
+
+  /* fetch() is async by default, not trivially compatible with the shown
+   below architecture.  Lovely.
+
+  XMLHttpRequest() is *also* async but lets you set async: false.  Annoying.
+
+  So we use jQuery and set the ajaxSetup to be *globally* synchronous.  This
+   seems to work for fetching
+  the few properties we care about.  this will, hopefully, be migrated to a 
+  less hacky setup.... eventually.
+  -k
+  */
+  $.ajaxSetup({
+    async: false
+  });
+
+  var q = jQuery.getJSON("/debug/durations.json");
+  var overall = q.responseJSON;
+  var match_duration_timestamp = overall.match_duration; 
+
   var mid_match_warning_timestamp = 30; // this is based on brief player survey.  may change.
   var warn_midmatch = false;
 
   socket.emit(
     "join_cage_request", 
     {
-      'cage_id': {{ cageID }} 
+      'cage_id': cageID
     }
   )
   socket.emit('client_attests_existence', {'location': window.location.href});
@@ -97,7 +118,7 @@ function load_competitors_names(red_name, blue_name) {
   }
 
   function readyup(botColor) {
-      socket.emit('player_ready', {'playerColor': botColor, "cageID": {{ cageID }} });
+      socket.emit('player_ready', {'playerColor': botColor, "cageID": cageID });
 
       if (botColor === "red") {
           document.getElementById("redisready").innerText = "RED READY";
