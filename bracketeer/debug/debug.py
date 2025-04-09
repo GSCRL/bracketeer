@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify
 
+from bracketeer.config import settings
 from bracketeer.matches.match_results import _json_api_stub
 
 debug_pages = Blueprint(
@@ -8,6 +9,17 @@ debug_pages = Blueprint(
     static_folder="./static",
     template_folder="./templates",
 )
+
+
+@debug_pages.route("/timer_duration.json")
+def _match_duration():
+    match_dur = 150
+    countdown_dur = 3
+    if "match_duration" in settings:
+        match_dur = settings["match_duration"]
+    if "countdown_duration" in settings:
+        countdown_dur = settings["countdown_duration"]
+    return jsonify({"countdown_duration": countdown_dur, "match_duration": match_dur})
 
 
 @debug_pages.route("/truefinals_requests")
