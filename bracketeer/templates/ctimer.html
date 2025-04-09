@@ -309,27 +309,6 @@ socket.on("control_player_ready_event", (station_info) => {
   }
 });
 
-// in the event of a tapout, tell arena controls who wins automagically.
-// This is not used in the version past 2024/11/02 (KC.)
-/*
-socket.on("control_player_tapout_event", (station_info) => {
-  stopTimer();
-  if (station_info.playerColor === "red") {
-      document.getElementById("redisready").innerText = "[TAPOUT]";
-      document.getElementById("blueisready").innerText = "[WIN]";
-      socket.emit("timer_event", generateTimerMessage("TAPOUT<br>BLUE WINS"));
-      socket.emit("timer_bg_event", generateBackgroundMessage("blue")); 
-  }
-
-  if (station_info.playerColor === "blue") {
-      document.getElementById("blueisready").innerText = "[TAPOUT]";
-      document.getElementById("redisready").innerText = "[WIN]";
-      socket.emit("timer_event", generateTimerMessage("TAPOUT<br>RED WINS"));
-      socket.emit("timer_bg_event", generateBackgroundMessage("red")); 
-  }
-});
-*/
-
 function resetTeamReadyButtons() {
   socket.emit("reset_screen_states", {'cageID': cageID });
 }
