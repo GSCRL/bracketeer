@@ -85,7 +85,7 @@ def build_player_dict_via_db_proxy():
             TrueFinalsTournamentsPlayers.select()
             .where(TrueFinalsTournamentsPlayers.last_updated + 3600 > time())
             .output(load_json=True)
-            .run_sync()
+            .run_sync(),
         )
         == 0
     ):
@@ -110,7 +110,7 @@ def build_player_dict_via_db_proxy():
                     tournament_id=i["tournament_id"],
                     last_updated=i["last_updated"],
                     player_data=i["player_data"],
-                )
+                ),
             ).run_sync()
 
     for tournament_player in (
@@ -168,7 +168,8 @@ def getAllTournamentsMatchesWithPlayers(filterFunction=None):
     for match in matches:
         for player in match["slots"]:
             player["bracketeer_player_data"] = getPlayerByIds(
-                match["tournamentID"], player["playerID"]
+                match["tournamentID"],
+                player["playerID"],
             )
 
     return matches
@@ -185,7 +186,7 @@ def getAllTournamentsMatchesSimple(filterFunction=None):
 
         if len(_current_data) == 1:
             print(
-                f"Exactly one valid response in API cache for this invocation of get all games for tourney_fk of {_current_fk}."
+                f"Exactly one valid response in API cache for this invocation of get all games for tourney_fk of {_current_fk}.",
             )
 
             for match in list(_current_data[0]["response"]):

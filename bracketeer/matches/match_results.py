@@ -4,7 +4,10 @@ from bracketeer.api_truefinals.cached_wrapper import getAllTournamentsMatchesWit
 from bracketeer.util.wrappers import ac_render_template
 
 match_results = Blueprint(
-    "match_results", __name__, static_folder="./static", template_folder="./templates"
+    "match_results",
+    __name__,
+    static_folder="./static",
+    template_folder="./templates",
 )
 
 

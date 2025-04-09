@@ -19,7 +19,7 @@ for match in matches_list:
                 getPlayerByIds(match["tournamentID"], player["playerID"])
                 for player in match["slots"]
             ],
-        }
+        },
     )
 
 pprint(output)

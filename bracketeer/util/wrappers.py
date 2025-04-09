@@ -10,7 +10,10 @@ def ac_render_template(template: str, **kwargs):
     # print(*args, **kwargs)
     # We inject the arena templates so that we don't need to manually pass them around.
     return render_template(
-        template, arena_secrets=arena_secrets, arena_settings=arena_settings, **kwargs
+        template,
+        arena_secrets=arena_secrets,
+        arena_settings=arena_settings,
+        **kwargs,
     )
 
 
@@ -67,7 +70,7 @@ class SocketIOHandlerConstruction:
 
             if len(find_resp) == 0:
                 BracketeerClients.insert(
-                    BracketeerClients(sid=request.sid, information=request)
+                    BracketeerClients(sid=request.sid, information=request),
                 ).run_sync()
 
             emit("arena_query_location", to=request.sid)
@@ -92,7 +95,9 @@ class SocketIOHandlerConstruction:
         @socketio.on("timer_bg_event")
         def handle_message(timer_bg_data):
             emit(
-                "timer_bg_event", timer_bg_data, to=f"cage_no_{timer_bg_data['cageID']}"
+                "timer_bg_event",
+                timer_bg_data,
+                to=f"cage_no_{timer_bg_data['cageID']}",
             )
 
         @socketio.on("join_cage_request")
@@ -105,13 +110,13 @@ class SocketIOHandlerConstruction:
                     to=f"cage_no_{request_data['cage_id']}",
                 )
                 logging.info(
-                    f"User SID ({request.sid}) has joined Cage #{request_data['cage_id']}"
+                    f"User SID ({request.sid}) has joined Cage #{request_data['cage_id']}",
                 )
 
         @socketio.on("player_ready")
         def handle_message(ready_msg: dict):
             logging.info(
-                f"player_ready, {ready_msg} for room {[ctl_rooms for ctl_rooms in rooms()]}"
+                f"player_ready, {ready_msg} for room {[ctl_rooms for ctl_rooms in rooms()]}",
             )
             logging.info(ready_msg)
             emit(
@@ -123,7 +128,7 @@ class SocketIOHandlerConstruction:
         @socketio.on("player_tapout")
         def handle_message(tapout_msg: dict):
             logging.info(
-                f"player_tapout, {tapout_msg} for room {[ctl_rooms for ctl_rooms in rooms()]}"
+                f"player_tapout, {tapout_msg} for room {[ctl_rooms for ctl_rooms in rooms()]}",
             )
             emit(
                 "control_player_tapout_event",

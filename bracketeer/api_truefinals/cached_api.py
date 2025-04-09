@@ -86,7 +86,7 @@ def _generate_cache_query(api_endpoint, expiry=60, expired_is_ok=False):
     )
     if not expired_is_ok:
         find_response = find_response.where(
-            (TrueFinalsAPICache.last_requested + expiry > time())
+            (TrueFinalsAPICache.last_requested + expiry > time()),
         )
 
     find_response = (
@@ -122,7 +122,7 @@ def getAPIEndpointRespectfully(api_endpoint: str, expiry=60):
                 api_path=api_endpoint,
                 resp_code=query_remote.status_code,
                 resp_headers=query_remote.headers,
-            )
+            ),
         ).run_sync()
 
         TrueFinalsAPICache.update(force=True)
@@ -130,7 +130,8 @@ def getAPIEndpointRespectfully(api_endpoint: str, expiry=60):
         logging.info(f"Valid keys found, not requesting {api_endpoint}.")
 
     find_response = _generate_cache_query(
-        api_endpoint=api_endpoint, expiry=expiry
+        api_endpoint=api_endpoint,
+        expiry=expiry,
     ).run_sync()
 
     # last ditch effort of "if we didn't get good data the last
@@ -139,7 +140,9 @@ def getAPIEndpointRespectfully(api_endpoint: str, expiry=60):
 
     if len(find_response) == 0:
         _generate_cache_query(
-            api_endpoint=api_endpoint, expiry=expiry, expired_is_ok=True
+            api_endpoint=api_endpoint,
+            expiry=expiry,
+            expired_is_ok=True,
         ).run_sync()
 
     return find_response
@@ -165,19 +168,22 @@ def getEventInformation(tournamentID: str) -> dict:
 
 def getAllGames(tournamentID: str) -> list[dict]:
     return getAPIEndpointRespectfully(
-        f"/v1/tournaments/{tournamentID}/games", expiry=15
+        f"/v1/tournaments/{tournamentID}/games",
+        expiry=15,
     )
 
 
 def getAllPlayersInTournament(tournamentID: str) -> list[dict]:
     return getAPIEndpointRespectfully(
-        f"/v1/tournaments/{tournamentID}/players", expiry=(5 * 60)
+        f"/v1/tournaments/{tournamentID}/players",
+        expiry=(5 * 60),
     )
 
 
 def getEventLocations(tournamentID: str) -> list[dict]:
     return getAPIEndpointRespectfully(
-        f"/v1/tournaments/{tournamentID}/locations", expiry=(60 * 60)
+        f"/v1/tournaments/{tournamentID}/locations",
+        expiry=(60 * 60),
     )
 
 
@@ -185,10 +191,10 @@ def getEventLocations(tournamentID: str) -> list[dict]:
 def purge_API_Cache(timer_passed=3600):
     # We only care about the last 10 minutes of event match failures I suspect.
     TrueFinalsAPICache.delete().where(
-        TrueFinalsAPICache.last_requested + 600 < time()
+        TrueFinalsAPICache.last_requested + 600 < time(),
     ).where(not TrueFinalsAPICache.successful).run_sync()
 
     # Anything past the last hour we get rid of.
     TrueFinalsAPICache.delete().where(
-        (TrueFinalsAPICache.last_requested + timer_passed < time())
+        (TrueFinalsAPICache.last_requested + timer_passed < time()),
     ).run_sync()

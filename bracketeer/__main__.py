@@ -56,7 +56,7 @@ def _debug_requests():
         .order_by(TrueFinalsAPICache.last_requested)
         .limit(100)
         .output(load_json=True)
-        .run_sync()
+        .run_sync(),
     )
 
 

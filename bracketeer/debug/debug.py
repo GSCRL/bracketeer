@@ -3,7 +3,10 @@ from flask import Blueprint, jsonify
 from bracketeer.matches.match_results import _json_api_stub
 
 debug_pages = Blueprint(
-    "debug", __name__, static_folder="./static", template_folder="./templates"
+    "debug",
+    __name__,
+    static_folder="./static",
+    template_folder="./templates",
 )
 
 
@@ -16,7 +19,7 @@ def _debug_requests():
         .order_by(TrueFinalsAPICache.last_requested)
         .limit(100)
         .output(load_json=True)
-        .run_sync()
+        .run_sync(),
     )
 
 
