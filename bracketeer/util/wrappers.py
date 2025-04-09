@@ -2,8 +2,8 @@ import logging
 
 from flask import render_template
 
-from src.config import secrets as arena_secrets
-from src.config import settings as arena_settings
+from bracketeer.config import secrets as arena_secrets
+from bracketeer.config import settings as arena_settings
 
 
 def ac_render_template(template: str, **kwargs):

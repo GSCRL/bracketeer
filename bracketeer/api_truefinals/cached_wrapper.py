@@ -1,13 +1,13 @@
 import logging
 from time import time
 
-from src.api_truefinals.cached_api import (
+from bracketeer.api_truefinals.cached_api import (
     TrueFinalsTournamentsPlayers,
     getAllGames,
     getAllPlayersInTournament,
     getEventLocations,
 )
-from src.config import settings as arena_settings
+from bracketeer.config import settings as arena_settings
 
 # used for player lookup to avoid rebuilding constantly.  Should be faster.
 

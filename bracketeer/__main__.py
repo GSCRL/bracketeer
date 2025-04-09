@@ -3,10 +3,11 @@ import logging
 from flask import Flask, jsonify, request
 from flask_socketio import SocketIO
 
-from debug.debug import debug_pages
-from matches.match_results import _json_api_stub, match_results
-from screens.user_screens import user_screens
-from util.wrappers import ac_render_template
+from bracketeer.debug.debug import debug_pages
+from bracketeer.matches.match_results import _json_api_stub, match_results
+from bracketeer.screens.user_screens import user_screens
+from bracketeer.util.wrappers import ac_render_template
+from bracketeer.utils import runtime_err_warn
 
 logging.basicConfig(level="INFO")
 
@@ -35,9 +36,6 @@ def realTimer(cageID):
         title="Controller",
         cageID=cageID,
     )
-
-
-from utils import runtime_err_warn
 
 
 @app.route("/settings", methods=("GET", "POST"))
@@ -85,5 +83,4 @@ def internal_error(error):
 logging.basicConfig()
 logging.getLogger().setLevel(logging.INFO)
 
-if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=80, debug=True)
+socketio.run(app, host="0.0.0.0", port=80, debug=True)

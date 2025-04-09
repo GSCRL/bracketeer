@@ -9,7 +9,7 @@ from piccolo.engine.sqlite import SQLiteEngine
 # ORM Test, ty Devyn.
 from piccolo.table import Table
 
-from src.api_truefinals.api import makeAPIRequest
+from bracketeer.api_truefinals.api import makeAPIRequest
 
 lru_DB = SQLiteEngine(path="tf_lru.sqlite")
 

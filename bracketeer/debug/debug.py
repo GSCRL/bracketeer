@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify
 
-from src.matches.match_results import _json_api_stub
+from bracketeer.matches.match_results import _json_api_stub
 
 debug_pages = Blueprint(
     "debug", __name__, static_folder="./static", template_folder="./templates"
@@ -9,7 +9,7 @@ debug_pages = Blueprint(
 
 @debug_pages.route("/truefinals_requests")
 def _debug_requests():
-    from src.api_truefinals.cached_api import TrueFinalsAPICache
+    from api_truefinals.cached_api import TrueFinalsAPICache
 
     return jsonify(
         TrueFinalsAPICache.select()
