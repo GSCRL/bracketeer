@@ -1,7 +1,10 @@
 from flask import Blueprint, Response, redirect, render_template
 
 user_screens = Blueprint(
-    "user_screens", __name__, static_folder="./static", template_folder="./templates"
+    "user_screens",
+    __name__,
+    static_folder="./static",
+    template_folder="./templates",
 )
 
 
@@ -18,14 +21,20 @@ def timerScreen(cageID: int):
 @user_screens.route("/<int:cageID>/timer/red")
 def redScreenVertical(cageID: int):
     return render_template(
-        "vert_timer.html", team_color="#b74444", team_color_name="red", cageID=cageID
+        "vert_timer.html",
+        team_color="#b74444",
+        team_color_name="red",
+        cageID=cageID,
     )
 
 
 @user_screens.route("/<int:cageID>/timer/blue")
 def blueScreenVertical(cageID: int):
     return render_template(
-        "vert_timer.html", team_color="#1892ce", team_color_name="blue", cageID=cageID
+        "vert_timer.html",
+        team_color="#1892ce",
+        team_color_name="blue",
+        cageID=cageID,
     )
 
 

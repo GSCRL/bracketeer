@@ -156,3 +156,7 @@ cython_debug/
 src/apicreds.json
 src/tf_lru.sqlite
 .secrets.json
+
+uv.lock
+bracketeer_clients.sqlite
+tf_lru.sqlite

@@ -1,41 +1,26 @@
-[tool.poetry]
-name = "arena-controls"
+[project]
+name = "bracketeer"
 version = "0.1.0"
-description = "Software toolkit to run a combat robotics event with a single cage.  Deeply a work in progress."
-authors = ["Kim Chase <noreply@hi-im.kim>"]
+description = "Combat robotics arena control tooling.  WIP."
 readme = "README.md"
-packages = [{include = "src"}]
+requires-python = ">=3.9"
+dependencies = [
+    "dynaconf>=3.2.4",
+    "flask-apscheduler>=1.13.1",
+    "flask-caching>=2.3.1",
+    "flask-socketio>=5.3.6",
+    "flask[async]>=3.1.0",
+    "httpx>=0.25.1",
+    "piccolo[sqlite]>=1.22.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-flask = {extras = ["async"], version = "^3.1.0"}
-flask-apscheduler = "^1.13.1"
-flask-socketio = "^5.3.6"
-httpx = "^0.25.1"
-flask-caching = "^2.1.0"
-dynaconf = "^3.2.4"
-expiringdict = "^1.2.2"
-httpx-cache = "^0.13.0"
-ratelimit = "^2.2.1"
-flask-sqlalchemy = "^3.1.1"
-piccolo = {extras = ["sqlite"], version = "^1.22.0"}
-requests = "^2.32.3"
-
-[tool.poetry.group.dev.dependencies]
-black = "^24.3.0"
-djlint = "^1.34.1"
-isort = "^5.13.2"
-pyproject-autoflake = "^1.0.2"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.ruff]
-target-version = "py39"
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "isort>=6.0.1",
+    "pyproject-autoflake>=1.0.2",
+    "ruff>=0.11.4",
+]
 
 [tool.ruff.lint]
-# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
-# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
-# McCabe complexity (`C901`) by default.
-select = ["E4", "E7", "E9", "F"]
+select = ["F401", "I", "PERF", "YTT", "ANN"]

@@ -1,6 +1,7 @@
-from httpx import Client
 import logging
+
 from config import secrets as arena_secrets
+from httpx import Client
 
 challonge_api_session = Client()
 

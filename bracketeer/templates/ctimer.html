@@ -2,17 +2,38 @@
 
 {% block bodysections %}
 <script src="{{url_for('static', filename='easytimer.min.js')}}"></script>
-    
+<script src="{{url_for('static', filename='xhr_helper.js')}}"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
 <script>
   var cageID = {{ cageID }};
-  var match_duration_timestamp = 150;
+
+  /* fetch() is async by default, not trivially compatible with the shown
+   below architecture.  Lovely.
+
+  XMLHttpRequest() is *also* async but lets you set async: false.  Annoying.
+
+  So we use jQuery and set the ajaxSetup to be *globally* synchronous.  This
+   seems to work for fetching
+  the few properties we care about.  this will, hopefully, be migrated to a 
+  less hacky setup.... eventually.
+  -k
+  */
+  $.ajaxSetup({
+    async: false
+  });
+
+  var q = jQuery.getJSON("/debug/durations.json");
+  var overall = q.responseJSON;
+  var match_duration_timestamp = overall.match_duration; 
+
   var mid_match_warning_timestamp = 30; // this is based on brief player survey.  may change.
   var warn_midmatch = false;
 
   socket.emit(
     "join_cage_request", 
     {
-      'cage_id': {{ cageID }} 
+      'cage_id': cageID
     }
   )
   socket.emit('client_attests_existence', {'location': window.location.href});
@@ -97,7 +118,7 @@ function load_competitors_names(red_name, blue_name) {
   }
 
   function readyup(botColor) {
-      socket.emit('player_ready', {'playerColor': botColor, "cageID": {{ cageID }} });
+      socket.emit('player_ready', {'playerColor': botColor, "cageID": cageID });
 
       if (botColor === "red") {
           document.getElementById("redisready").innerText = "RED READY";
@@ -287,27 +308,6 @@ socket.on("control_player_ready_event", (station_info) => {
       document.getElementById("blueisready").innerText = "[READY]";
   }
 });
-
-// in the event of a tapout, tell arena controls who wins automagically.
-// This is not used in the version past 2024/11/02 (KC.)
-/*
-socket.on("control_player_tapout_event", (station_info) => {
-  stopTimer();
-  if (station_info.playerColor === "red") {
-      document.getElementById("redisready").innerText = "[TAPOUT]";
-      document.getElementById("blueisready").innerText = "[WIN]";
-      socket.emit("timer_event", generateTimerMessage("TAPOUT<br>BLUE WINS"));
-      socket.emit("timer_bg_event", generateBackgroundMessage("blue")); 
-  }
-
-  if (station_info.playerColor === "blue") {
-      document.getElementById("blueisready").innerText = "[TAPOUT]";
-      document.getElementById("redisready").innerText = "[WIN]";
-      socket.emit("timer_event", generateTimerMessage("TAPOUT<br>RED WINS"));
-      socket.emit("timer_bg_event", generateBackgroundMessage("red")); 
-  }
-});
-*/
 
 function resetTeamReadyButtons() {
   socket.emit("reset_screen_states", {'cageID': cageID });

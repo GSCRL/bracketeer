@@ -1,8 +1,6 @@
 from pprint import pprint
 
-from api_truefinals.cached_wrapper import (
-    getAllTournamentsMatchesSimple,
-)
+from api_truefinals.cached_wrapper import getAllTournamentsMatchesSimple
 
 # logging.basicConfig()
 # logging.getLogger().setLevel(logging.INFO)
@@ -21,7 +19,7 @@ for match in matches_list:
                 getPlayerByIds(match["tournamentID"], player["playerID"])
                 for player in match["slots"]
             ],
-        }
+        },
     )
 
 pprint(output)
