@@ -12,14 +12,17 @@ View all of your event brackets in one place, coordinate multi-arena events, and
 
 ![A screenshow showing the control pane for match timer use, as well as the individual robot loading dialogue to apply names to ensure competitors are in the right place.](./_repo/match_control.png)
 
-## Needs
+## Installation
+
+This tool requires use of python (3.9+), `uv`
 
 This system is written in python and managed with poetry.
 
 To install you'll need python 3.9 or greater, then to install `uv`, then uv run main.py
 
-You'll also need to make use of the python package 
+## Building
 
+To build the package, run `uv install --extra dev` and then ` uv pip install -e .` (for the package, otherwise just run `uv run ./bracketeer/__main.py`)
 
 ## Networking Setup
 
@@ -28,3 +31,9 @@ When running the host computer, setting a static IP address is not optional.  If
 GSCRL uses `192.168.8.250` due to the DHCP range by default of our [travel router](https://www.amazon.com/GL-iNet-GL-SFT1200-Secure-Travel-Router/dp/B09N72FMH5).  Anything will work, but be consistent and set the netmask properly (/24 | 255.255.255.0 by default)
 
 GSCRL *also* sets a DNS override in the DNS server on the travel router to make `192.168.8.250` point to `arena.gscrl.org`.  This was a legacy holdover from when using slow-rotating but externally validated Let's Encrypt setups even offline, but was retained for convenience.
+
+## Additional Tools
+
+The `_notebooks` directory contains any tools built to make running a league easier (such as the GSCRL District Point model for advancement to the season championship).
+
+To run said notebooks, install jupyter and then run `jupyter notebook`.
