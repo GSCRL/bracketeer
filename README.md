@@ -10,6 +10,8 @@ View all of your event brackets in one place, coordinate multi-arena events, and
 
 ![A screenshot of the upcoming matches screen showing multiple matches and some active.](./repo/upcoming.png)
 
+![A screenshow showing the control pane for match timer use, as well as the individual robot loading dialogue to apply names to ensure competitors are in the right place.](./repo/match_control.png)
+
 ## Needs
 
 This system is written in python and managed with poetry.
