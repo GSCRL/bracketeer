@@ -8,9 +8,9 @@ This was initially built for the [Garden State Combat Robotics League](https://w
 
 View all of your event brackets in one place, coordinate multi-arena events, and show the timer on stream for your event production needs.
 
-![A screenshot of the upcoming matches screen showing multiple matches and some active.](./repo/upcoming.png)
+![A screenshot of the upcoming matches screen showing multiple matches and some active.](./_repo/upcoming.png)
 
-![A screenshow showing the control pane for match timer use, as well as the individual robot loading dialogue to apply names to ensure competitors are in the right place.](./repo/match_control.png)
+![A screenshow showing the control pane for match timer use, as well as the individual robot loading dialogue to apply names to ensure competitors are in the right place.](./_repo/match_control.png)
 
 ## Needs
 
