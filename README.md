@@ -4,34 +4,25 @@ A work-in-progress tool to run the timers for matches for combat robotics, as we
 
 This was initially built for the [Garden State Combat Robotics League](https://www.gscrl.org) but much of it is portable to other organizing bodies.
 
-## Integrations
+## Core Features
 
-This tool right now polls TrueFinals, with the intent to also push to TrueFinals down the line.
+View all of your event brackets in one place, coordinate multi-arena events, and show the timer on stream for your event production needs.
 
-There will also be the ability to import some data from RobotCombatEvents should there be a want / need for that.
+![A screenshot of the upcoming matches screen showing multiple matches and some active.](./repo/upcoming.png)
 
 ## Needs
 
 This system is written in python and managed with poetry.
 
-To install you'll need python 3.9 or greater, then to install `pipx` per the install guide [here.](https://github.com/pypa/pipx?tab=readme-ov-file#install-pipx)
+To install you'll need python 3.9 or greater, then to install `uv`, then uv run main.py
 
 You'll also need to make use of the python package 
 
-Then, install poetry via the steps [here.](https://python-poetry.org/docs/)
 
-Afterwards, you should `cd` to your install location, `poetry install`.
+## Networking Setup
 
-Please then run `poetry self add [poetry-plugin-shell](https://github.com/python-poetry/poetry-plugin-shell)` to ensure you can use the shell command for rapid development and iteration. 
+When running the host computer, setting a static IP address is not optional.  If not done so, you may have timer clients disconnect and unable to find the origin.
 
-After installation, run `poetry shell`.
+GSCRL uses `192.168.8.250` due to the DHCP range by default of our [travel router](https://www.amazon.com/GL-iNet-GL-SFT1200-Secure-Travel-Router/dp/B09N72FMH5).  Anything will work, but be consistent and set the netmask properly (/24 | 255.255.255.0 by default)
 
-`cd` to the `src` folder, and then run `python app.py`
-
-## Networking
-
-Note: Please be sure to change your IP to something static for consistency with the timer clients for reconnects.
-
-We typically use `192.168.8.250` and set the travel router to have a DNS override for that to `arena.gscrl.org`.
-
-This is done on a specific-use travel router, like [this one.](https://www.amazon.com/GL-iNet-GL-SFT1200-Secure-Travel-Router/dp/B09N72FMH5)
+GSCRL *also* sets a DNS override in the DNS server on the travel router to make `192.168.8.250` point to `arena.gscrl.org`.  This was a legacy holdover from when using slow-rotating but externally validated Let's Encrypt setups even offline, but was retained for convenience.
