@@ -18,11 +18,11 @@ This tool requires use of python (3.9+), `uv`
 
 This system is written in python and managed with poetry.
 
-To install you'll need python 3.9 or greater, then to install `uv`, then uv run main.py
+To install you'll need python 3.9 or greater, then to install `uv`, then uv run bracketeer/__main__.py
 
 ## Building
 
-To build the package, run `uv install --extra dev` and then ` uv pip install -e .` (for the package, otherwise just run `uv run ./bracketeer/__main.py`)
+To build the package, run `uv sync --group dev` and then `uv pip install -e .` (for the package, otherwise just run `uv run bracketeer/__main__.py`)
 
 ## Networking Setup
 
