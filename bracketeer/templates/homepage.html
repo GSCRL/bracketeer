@@ -33,6 +33,222 @@
 </section>
 {% endif %}
 
+<!-- Event Status Dashboard -->
+<section class="section">
+    <div class="container">
+        <h2 class="title is-4">
+            <span class="icon">
+                <i class="fas fa-tachometer-alt"></i>
+            </span>
+            Event Status Dashboard
+        </h2>
+        
+        <div class="columns">
+            <!-- Event Information -->
+            <div class="column is-4">
+                <div class="box">
+                    <h3 class="title is-5">
+                        <span class="icon has-text-info">
+                            <i class="fas fa-calendar-alt"></i>
+                        </span>
+                        Event Information
+                    </h3>
+                    <table class="table is-narrow is-fullwidth">
+                        <tbody>
+                            <tr>
+                                <td><strong>Name:</strong></td>
+                                <td>{{ event_config.name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>League:</strong></td>
+                                <td>{{ event_config.league }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Date:</strong></td>
+                                <td>{{ event_config.date }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Match Duration:</strong></td>
+                                <td>{{ event_config.match_duration }}s</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Countdown:</strong></td>
+                                <td>{{ event_config.countdown_duration }}s</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Tournament Configuration -->
+            <div class="column is-4">
+                <div class="box">
+                    <h3 class="title is-5">
+                        <span class="icon has-text-success">
+                            <i class="fas fa-trophy"></i>
+                        </span>
+                        Tournaments ({{ event_config.tournaments|length }})
+                    </h3>
+                    {% if event_config.tournaments %}
+                        <div class="content">
+                            {% for tournament in event_config.tournaments %}
+                            <div class="notification is-light">
+                                <div class="is-flex is-justify-content-space-between is-align-items-center">
+                                    <div>
+                                        <strong>{{ tournament.display_name }}</strong>
+                                        <br>
+                                        <small class="has-text-grey">
+                                            {{ tournament.tourn_type|upper }}: {{ tournament.id[:8] }}...
+                                        </small>
+                                    </div>
+                                    {% if tournament.weightInt > 0 %}
+                                        <span class="tag is-primary">{{ tournament.weightInt }}g</span>
+                                    {% else %}
+                                        <span class="tag is-info">{{ tournament.tourn_type|upper }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="notification is-warning">
+                            <p>No tournaments configured</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Cage/Arena Configuration -->
+            <div class="column is-4">
+                <div class="box">
+                    <h3 class="title is-5">
+                        <span class="icon has-text-warning">
+                            <i class="fas fa-square"></i>
+                        </span>
+                        Cages/Arenas ({{ event_config.cages|length }})
+                    </h3>
+                    {% if event_config.cages %}
+                        <div class="content">
+                            {% for cage in event_config.cages %}
+                            <div class="notification is-light">
+                                <div class="is-flex is-justify-content-space-between is-align-items-center">
+                                    <div>
+                                        <strong>{{ cage.name }}</strong>
+                                        <br>
+                                        <small class="has-text-grey">Cage ID: {{ cage.id }}</small>
+                                    </div>
+                                    <div class="field is-grouped">
+                                        <div class="dropdown is-hoverable">
+                                            <div class="dropdown-trigger">
+                                                <button class="button is-small is-primary" aria-haspopup="true" aria-controls="dropdown-cage-{{ cage.id }}">
+                                                    <span>Quick Access</span>
+                                                    <span class="icon is-small">
+                                                        <i class="fas fa-angle-down" aria-hidden="true"></i>
+                                                    </span>
+                                                </button>
+                                            </div>
+                                            <div class="dropdown-menu" id="dropdown-cage-{{ cage.id }}" role="menu">
+                                                <div class="dropdown-content">
+                                                    <a href="/control/{{ cage.id }}" class="dropdown-item">
+                                                        <span class="icon"><i class="fas fa-gavel"></i></span>
+                                                        Judge Control
+                                                    </a>
+                                                    <a href="/screens/{{ cage.id }}/timer/red" class="dropdown-item">
+                                                        <span class="icon"><i class="fas fa-user" style="color: red;"></i></span>
+                                                        Red Player Screen
+                                                    </a>
+                                                    <a href="/screens/{{ cage.id }}/timer/blue" class="dropdown-item">
+                                                        <span class="icon"><i class="fas fa-user" style="color: blue;"></i></span>
+                                                        Blue Player Screen
+                                                    </a>
+                                                    <a href="/screens/{{ cage.id }}/timer" class="dropdown-item">
+                                                        <span class="icon"><i class="fas fa-tv"></i></span>
+                                                        Stream Overlay
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="notification is-warning">
+                            <p>No cages configured</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Status Indicators -->
+        <div class="columns">
+            <div class="column">
+                <div class="notification {% if event_config.tournaments and event_config.cages %}is-success{% else %}is-warning{% endif %}">
+                    <div class="is-flex is-align-items-center">
+                        <span class="icon is-large">
+                            {% if event_config.tournaments and event_config.cages %}
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            {% else %}
+                                <i class="fas fa-exclamation-triangle fa-2x"></i>
+                            {% endif %}
+                        </span>
+                        <div class="ml-3">
+                            <p class="is-size-5 has-text-weight-bold">
+                                {% if event_config.tournaments and event_config.cages %}
+                                    ✅ System Ready
+                                {% else %}
+                                    ⚠️ Configuration Incomplete
+                                {% endif %}
+                            </p>
+                            <p class="is-size-6">
+                                {% if not event_config.tournaments %}
+                                    No tournaments configured. 
+                                {% endif %}
+                                {% if not event_config.cages %}
+                                    No cages configured.
+                                {% endif %}
+                                {% if event_config.tournaments and event_config.cages %}
+                                    Event is configured and ready for matches.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="field is-grouped is-grouped-centered">
+            <p class="control">
+                <a class="button is-large is-success" href="/matches/upcoming">
+                    <span class="icon">
+                        <i class="fas fa-list"></i>
+                    </span>
+                    <span>View Match Queue</span>
+                </a>
+            </p>
+            <p class="control">
+                <a class="button is-large is-info" href="/setup">
+                    <span class="icon">
+                        <i class="fas fa-magic"></i>
+                    </span>
+                    <span>Setup Wizard</span>
+                </a>
+            </p>
+            <p class="control">
+                <a class="button is-large is-light" href="/settings">
+                    <span class="icon">
+                        <i class="fas fa-cog"></i>
+                    </span>
+                    <span>Settings</span>
+                </a>
+            </p>
+        </div>
+    </div>
+</section>
+
 <section class="section">
     <div class="content">
         <h2>Match Control</h2>
@@ -54,6 +270,29 @@
     </div>
     
   <hr>
+
+    <div class="content">
+        <h2>Configuration</h2>
+        <div class="field is-grouped">
+            <p class="control">
+                <a class="button is-primary" href="/setup">
+                    <span class="icon">
+                        <i class="fas fa-magic"></i>
+                    </span>
+                    <span>Setup Wizard</span>
+                </a>
+            </p>
+            <p class="control">
+                <a class="button is-light" href="/settings">
+                    <span class="icon">
+                        <i class="fas fa-cog"></i>
+                    </span>
+                    <span>Settings</span>
+                </a>
+            </p>
+        </div>
+        <p>Use the Setup Wizard for initial configuration or when adding new tournaments. Use Settings for manual configuration and credential updates.</p>
+    </div>
 
     <div class="content">
         <h2>Help</h2>

@@ -33,7 +33,70 @@ SocketIOHandlerConstruction(socketio)
 
 @app.route("/")
 def index():
-    return ac_render_template("homepage.html", title="Landing Page")
+    from bracketeer.config import settings
+    from bracketeer.api_truefinals.cached_api import getTournamentDetails
+    
+    # Get basic event configuration
+    event_config = {
+        'name': settings.get('event_name', 'No Event Configured'),
+        'league': settings.get('event_league', 'Unknown League'),
+        'date': settings.get('event_date', 'Date not set'),
+        'match_duration': settings.get('match_duration', 150),
+        'countdown_duration': settings.get('countdown_duration', 3),
+        'tournaments': [],
+        'cages': settings.get('tournament_cages', [])
+    }
+    
+    # Enhance tournament data with actual names from API
+    tournament_keys = settings.get('tournament_keys', [])
+    for tournament in tournament_keys:
+        enhanced_tournament = tournament.copy()
+        
+        # Try to get the real tournament title from TrueFinals API
+        if tournament.get('tourn_type') == 'truefinals':
+            try:
+                tournament_details = getTournamentDetails(tournament['id'])
+                
+                if tournament_details:
+                    # Handle the cached API response format
+                    if isinstance(tournament_details, list) and len(tournament_details) > 0:
+                        cache_entry = tournament_details[0]
+                        # Extract the actual API response from the cache structure
+                        api_data = cache_entry.get('response', cache_entry)
+                    elif isinstance(tournament_details, dict):
+                        api_data = tournament_details.get('response', tournament_details)
+                    else:
+                        api_data = None
+                    
+                    if api_data and isinstance(api_data, dict):
+                        # Try different possible field names for tournament name
+                        name_fields = ['title', 'name', 'tournamentName', 'event_name']
+                        tournament_name = None
+                        
+                        for field in name_fields:
+                            if field in api_data:
+                                tournament_name = api_data[field]
+                                break
+                        
+                        if tournament_name:
+                            enhanced_tournament['display_name'] = tournament_name
+                        else:
+                            enhanced_tournament['display_name'] = tournament.get('weightclass', f'Tournament {tournament["id"][:8]}')
+                    else:
+                        enhanced_tournament['display_name'] = tournament.get('weightclass', f'Tournament {tournament["id"][:8]}')
+                else:
+                    enhanced_tournament['display_name'] = tournament.get('weightclass', f'Tournament {tournament["id"][:8]}')
+            except Exception as e:
+                # Fallback to weightclass if API call fails
+                logging.warning(f"Failed to fetch tournament details for {tournament['id']}: {e}")
+                enhanced_tournament['display_name'] = tournament.get('weightclass', f'Tournament {tournament["id"][:8]}')
+        else:
+            # For non-TrueFinals tournaments, use weightclass
+            enhanced_tournament['display_name'] = tournament.get('weightclass', f'Tournament {tournament["id"]}')
+        
+        event_config['tournaments'].append(enhanced_tournament)
+    
+    return ac_render_template("homepage.html", title="Landing Page", event_config=event_config)
 
 
 @app.route("/control/<int:cageID>")

@@ -169,7 +169,7 @@ def getEventInformation(tournamentID: str) -> dict:
 def getAllGames(tournamentID: str) -> list[dict]:
     return getAPIEndpointRespectfully(
         f"/v1/tournaments/{tournamentID}/games",
-        expiry=15,
+        expiry=5,  # Reduced to 5 seconds for faster match state updates
     )
 
 
@@ -187,12 +187,44 @@ def getEventLocations(tournamentID: str) -> list[dict]:
     )
 
 
+def getUserTournaments() -> list[dict]:
+    """Get all tournaments for the authenticated user"""
+    return getAPIEndpointRespectfully(
+        "/v1/user/tournaments",
+        expiry=(5 * 60),
+    )
+
+
+def getTournamentDetails(tournamentID: str) -> list[dict]:
+    """Get lightweight tournament details (faster than full tournament data)"""
+    return getAPIEndpointRespectfully(
+        f"/v1/tournaments/{tournamentID}/details",
+        expiry=(2 * 60),  # Cache for 2 minutes - details change less frequently
+    )
+
+
+def getTournamentGames(tournamentID: str) -> list[dict]:
+    """Get all games/matches for a tournament"""
+    return getAPIEndpointRespectfully(
+        f"/v1/tournaments/{tournamentID}/games",
+        expiry=15,  # 15 seconds - games change frequently
+    )
+
+
+def getTournamentLocations(tournamentID: str) -> list[dict]:
+    """Get tournament locations/arenas"""
+    return getAPIEndpointRespectfully(
+        f"/v1/tournaments/{tournamentID}/locations",
+        expiry=(10 * 60),  # 10 minutes - locations change rarely
+    )
+
+
 # DO NOT USE LIGHTLY.  THIS EMPTIES THE FILE.
 def purge_API_Cache(timer_passed=3600):
     # We only care about the last 10 minutes of event match failures I suspect.
     TrueFinalsAPICache.delete().where(
         TrueFinalsAPICache.last_requested + 600 < time(),
-    ).where(not TrueFinalsAPICache.successful).run_sync()
+    ).where(TrueFinalsAPICache.successful == False).run_sync()
 
     # Anything past the last hour we get rid of.
     TrueFinalsAPICache.delete().where(

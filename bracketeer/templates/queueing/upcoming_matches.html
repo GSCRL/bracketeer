@@ -6,7 +6,7 @@
 <section class="hero is-info">
   <div class="hero-body">
     <p class="title">
-      Upcoming Matches
+      Match Queue
     </p>
     {% if arena_settings.event_name %}
     <p class="subtitle">
@@ -15,132 +15,243 @@
     {% endif %}
   </div>
 
-    {# This snippet is only applicable to multi-arena events.  This should avoid stuff breaking too egregiously. #}
-    {% if cages|length > 1 %}
-    <div class="hero-foot">
-    <nav class="tabs is-boxed is-fullwidth">
-      <div class="container">
-        <ul>
-          <li class="is-active">
-            <a>[All Cages]</a>
-          </li>
-          {# Iterate over all additional cages in the event we have more than 1. #}
-          {% for cage in cages %}
-            <li><a>{{ cage.name }} ({{ cage.id }})</a></li>
-          {% endfor %}
-        </ul>
+  <!-- Match Status Summary -->
+  <div class="hero-foot">
+    <div class="container">
+      <div class="field is-grouped is-grouped-multiline is-justify-content-center">
+        <div class="control">
+          <div class="tags has-addons">
+            <span class="tag is-danger is-large">
+              <span class="icon"><i class="fas fa-fist-raised"></i></span>
+              <span>Active</span>
+            </span>
+            <span class="tag is-danger is-light is-large">{{ match_data.active_count }}</span>
+          </div>
+        </div>
+        <div class="control">
+          <div class="tags has-addons">
+            <span class="tag is-warning is-large">
+              <span class="icon"><i class="fas fa-hourglass-half"></i></span>
+              <span>On Deck</span>
+            </span>
+            <span class="tag is-warning is-light is-large">{{ match_data.on_deck_count }}</span>
+          </div>
+        </div>
+        <div class="control">
+          <div class="tags has-addons">
+            <span class="tag is-info is-large">
+              <span class="icon"><i class="fas fa-clock"></i></span>
+              <span>Upcoming</span>
+            </span>
+            <span class="tag is-info is-light is-large">{{ match_data.upcoming_count }}</span>
+          </div>
+        </div>
+        <div class="control">
+          <a href="/matches/upcoming?refresh=1" class="button is-small is-primary">
+            <span class="icon"><i class="fas fa-sync-alt"></i></span>
+            <span>Refresh</span>
+          </a>
+        </div>
       </div>
-    </nav>
+    </div>
   </div>
-  {% endif %}
 </section>
 {% endif %}
 
+<!-- Active Matches Section -->
+{% if match_data.organized.active %}
 <section class="section">
-    {% if div_matches %}
-    <table class="table is-striped is-fullwidth">
-        <thead>
-          <tr>
-            {# This section distinctly needs work. #}
-            {% if cages %}
-              <th>Location</th>
+  <div class="container">
+    <h2 class="title is-4">
+      <span class="icon has-text-danger">
+        <i class="fas fa-fist-raised"></i>
+      </span>
+      Fighting Now
+    </h2>
+    
+    {% for match in match_data.organized.active %}
+    <div class="notification is-danger is-light">
+      <div class="columns is-vcentered">
+        <div class="column is-2">
+          <div class="content has-text-centered">
+            <p class="is-size-6 has-text-weight-bold">{{ match.weightclass[:4].upper() }}</p>
+            <p class="is-size-7">{{ match.name }}</p>
+            {% if match.tournament_display_name %}
+            <p class="is-size-8 has-text-grey">{{ match.tournament_display_name }}</p>
             {% endif %}
-            <th>Called Since</th>
-            <th>Match Info</th>
-            <th colspan="3">Red</th>
-            <th colspan="3">Blue</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for match in div_matches %}
-          <tr {% if 'calledSince' in match %} {% if match.calledSince != none %} {# class="is-link" #}{% endif %} {% endif %}>
-            <td> 
+            <span class="tag is-danger">ACTIVE</span>
+          </div>
+        </div>
+        <div class="column is-5">
+          {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
+          <div class="box has-background-danger-light">
+            <p class="has-text-weight-bold is-size-5">🔴 {{ match.slots[0].bracketeer_player_data.name }}</p>
+            <div class="tags has-addons">
+              <span class="tag">Record</span>
+              <span class="tag is-success">{{ match.slots[0].bracketeer_player_data.wins }}W</span>
+              <span class="tag is-danger">{{ match.slots[0].bracketeer_player_data.losses }}L</span>
+              <span class="tag is-warning">{{ match.slots[0].bracketeer_player_data.ties }}T</span>
+            </div>
+          </div>
+          {% else %}
+          <div class="box has-background-danger-light">
+            <p class="has-text-weight-bold is-size-5">🔴 TBD</p>
+          </div>
+          {% endif %}
+        </div>
+        <div class="column is-5">
+          {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
+          <div class="box has-background-info-light">
+            <p class="has-text-weight-bold is-size-5">🔵 {{ match.slots[1].bracketeer_player_data.name }}</p>
+            <div class="tags has-addons">
+              <span class="tag">Record</span>
+              <span class="tag is-success">{{ match.slots[1].bracketeer_player_data.wins }}W</span>
+              <span class="tag is-danger">{{ match.slots[1].bracketeer_player_data.losses }}L</span>
+              <span class="tag is-warning">{{ match.slots[1].bracketeer_player_data.ties }}T</span>
+            </div>
+          </div>
+          {% else %}
+          <div class="box has-background-info-light">
+            <p class="has-text-weight-bold is-size-5">🔵 TBD</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 
+<!-- On Deck Section -->
+{% if match_data.organized.on_deck %}
+<section class="section">
+  <div class="container">
+    <h2 class="title is-4">
+      <span class="icon has-text-warning">
+        <i class="fas fa-hourglass-half"></i>
+      </span>
+      On Deck - Called to Arena
+    </h2>
+    
+    {% for match in match_data.organized.on_deck %}
+    <div class="notification is-warning is-light">
+      <div class="columns is-vcentered">
+        <div class="column is-2">
+          <div class="content has-text-centered">
+            <p class="is-size-6 has-text-weight-bold">{{ match.weightclass[:4].upper() }}</p>
+            <p class="is-size-7">{{ match.name }}</p>
+            {% if match.tournament_display_name %}
+            <p class="is-size-8 has-text-grey">{{ match.tournament_display_name }}</p>
+            {% endif %}
+            {% if match.calledSince %}
+            <span class="tag is-warning" id="called_since_{{ match.tournamentID }}_{{ match.id }}">Called</span>
+            <script>
+              document.getElementById("called_since_{{ match.tournamentID }}_{{ match.id }}").innerHTML = "Called " + time_ago({{ match.calledSince }});
+            </script>
+            {% else %}
+            <span class="tag is-warning">ON DECK</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="column is-5">
+          {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
+          <div class="box">
+            <p class="has-text-weight-bold is-size-5">🔴 {{ match.slots[0].bracketeer_player_data.name }}</p>
+            <div class="tags has-addons">
+              <span class="tag">Record</span>
+              <span class="tag is-success">{{ match.slots[0].bracketeer_player_data.wins }}W</span>
+              <span class="tag is-danger">{{ match.slots[0].bracketeer_player_data.losses }}L</span>
+              <span class="tag is-warning">{{ match.slots[0].bracketeer_player_data.ties }}T</span>
+            </div>
+          </div>
+          {% else %}
+          <div class="box">
+            <p class="has-text-weight-bold is-size-5">🔴 TBD</p>
+          </div>
+          {% endif %}
+        </div>
+        <div class="column is-5">
+          {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
+          <div class="box">
+            <p class="has-text-weight-bold is-size-5">🔵 {{ match.slots[1].bracketeer_player_data.name }}</p>
+            <div class="tags has-addons">
+              <span class="tag">Record</span>
+              <span class="tag is-success">{{ match.slots[1].bracketeer_player_data.wins }}W</span>
+              <span class="tag is-danger">{{ match.slots[1].bracketeer_player_data.losses }}L</span>
+              <span class="tag is-warning">{{ match.slots[1].bracketeer_player_data.ties }}T</span>
+            </div>
+          </div>
+          {% else %}
+          <div class="box">
+            <p class="has-text-weight-bold is-size-5">🔵 TBD</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 
-            <span class="button is-small is-primary is-fullwidth">
-              <b id="called_since_{{ match.tournamentID }}_{{ match.id }} ">
-              {# This area is intentionally left blank. #}
-            </b>
-            </span>
-
-              {% if match.calledSince is not none %}
-              <script>
-                document.getElementById("called_since_{{ match.tournamentID }}_{{ match.id }} ").innerHTML = "Called " + time_ago( {{ match.calledSince }} );
-              </script>
-              {% else %}
-              <script>
-                document.getElementById("called_since_{{ match.tournamentID }}_{{ match.id }} ").innerHTML = "ACTIVE NOW";
-                document.getElementById("called_since_{{ match.tournamentID }}_{{ match.id }} ").parentElement.classList.replace('is-primary', 'is-danger');
-              </script>
-              {% endif %}
-            </td>
-
-            <td><b>{{ match.weightclass[:4].upper() }}-{{ match.name }}</b></td> 
-            <!-- This is the "Match Info" short code.  It's ugly but useful.-->
-
-            {% if match.state != "unavailable" %}
-              {% for competitor in match.slots %}
-              <!-- COmpetitor name for the current L-to-R iteration loop. -->
-              {% if competitor.bracketeer_player_data %}
-              <td colspan="2"><b>{{ competitor.bracketeer_player_data.name }}</b> </td>
-              {% else %}
-              <td colspan="2"><b>{{ competitor.playerID }}</b> </td>
-              {% endif %}
-
-              <td>  
-                  {% if competitor.bracketeer_player_data %}
-                    <div class="field is-grouped is-grouped-multiline">
-                      <div class="control">
-                      <b>
-                      <div class="tags has-addons">
-                        <span class="tag">WLT</span>
-                        <span class="tag is-primary is-light is-rounded">{{ competitor.bracketeer_player_data.wins }}</span>
-                        <span class="tag is-danger is-light is-rounded">{{ competitor.bracketeer_player_data.losses }}</span>
-                        <span class="tag is-warning is-light is-rounded">{{ competitor.bracketeer_player_data.ties }}</span>
-                        </div>
-                        </b>
-                      </div>
-                    </div>
+<!-- Upcoming Matches Section -->
+{% if match_data.organized.upcoming %}
+<section class="section">
+  <div class="container">
+    <h2 class="title is-4">
+      <span class="icon has-text-info">
+        <i class="fas fa-clock"></i>
+      </span>
+      Upcoming Matches
+    </h2>
+    
+    <div class="columns is-multiline">
+      {% for match in match_data.organized.upcoming %}
+      <div class="column is-half">
+        <div class="notification is-info is-light">
+          <div class="content">
+            <p class="has-text-weight-bold is-size-6">{{ match.weightclass[:4].upper() }} - {{ match.name }}</p>
+            {% if match.tournament_display_name %}
+            <p class="is-size-7 has-text-grey">{{ match.tournament_display_name }}</p>
+            {% endif %}
+            <div class="columns is-mobile">
+              <div class="column">
+                {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
+                <p>🔴 {{ match.slots[0].bracketeer_player_data.name }}</p>
+                <small>{{ match.slots[0].bracketeer_player_data.wins }}W-{{ match.slots[0].bracketeer_player_data.losses }}L-{{ match.slots[0].bracketeer_player_data.ties }}T</small>
+                {% else %}
+                <p>🔴 TBD</p>
                 {% endif %}
-              </td>
-              {% endfor %} <!-- closes competitor loop -->
-
-              {# Fancy catchall for unfinished / partially filled match. #}
-              {% if match.slots|length == 1 %} 
-              <td>
-                <i>waiting . . . </i>
-              </td>
-              {% endif %} <!-- closes out catchall for partially filled matches. -->
-
-            {% else %} <!-- catching for if a match has zero slots filled yet. -->
-            <td colspan=2>
-              <i>waiting . . . </i>
-              <div class="field is-grouped is-grouped-multiline">
-                <div class="control">
-                <div class="tags has-addons">
-                  <span class="tag">Advances from {{ match.weightclass }}</span>
-                  {% for slot in match.slots %}
-                  <span class="tag is-success is-light">
-                    {% if slot.gscrl_friendly_previous_name %}
-                      {{ slot.gscrl_friendly_previous_name }} 
-                    {% else %}
-                      {{ slot.prevGameID}}
-                    {% endif %}
-                  </span>
-                  {% endfor %}
-                </div>
               </div>
-            </td>
-            {% endif %}
-          </tr>
-          {% endfor %} <!-- Closes loop for competitors in a given match.  Mostly a catch-all tbh.  -->
-        </tbody>
-      </table>
+              <div class="column">
+                {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
+                <p>🔵 {{ match.slots[1].bracketeer_player_data.name }}</p>
+                <small>{{ match.slots[1].bracketeer_player_data.wins }}W-{{ match.slots[1].bracketeer_player_data.losses }}L-{{ match.slots[1].bracketeer_player_data.ties }}T</small>
+                {% else %}
+                <p>🔵 TBD</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
 
-    {% else %} <!-- catchall for no valid matches.  Usually happens at the start or end of an event.  -->
-          <p>There are no matches in the system called for fights.</p>
-          <p> Hang tight, we'll get to the robot carnage shortly!</p>
-          <p>🤖🦾🎆🧨</p>
-    {% endif %}
-  </section>
+<!-- No Matches Available -->
+{% if not match_data.organized.active and not match_data.organized.on_deck and not match_data.organized.upcoming %}
+<section class="section">
+  <div class="container has-text-centered">
+    <div class="notification is-info">
+      <p class="is-size-4">No matches currently available</p>
+      <p>Hang tight, we'll get to the robot carnage shortly!</p>
+      <p class="is-size-2">🤖🦾🎆🧨</p>
+    </div>
+  </div>
+</section>
+{% endif %}
 {% endblock %}
