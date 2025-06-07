@@ -195,6 +195,133 @@ def routeForLastMatches():
     )
 
 
+@match_results.route("/fight-log")
+def routeForFightLog():
+    """Fight log showing all completed matches organized by tournament"""
+    from bracketeer.api_truefinals.cached_wrapper import getAllTournamentsMatchesWithPlayers
+    from bracketeer.config import settings
+    from bracketeer.api_truefinals.cached_api import getTournamentDetails
+    
+    # Get tournament filter if specified
+    tournament_filter = request.args.get('tournament')
+    autoreload = request.args.get("autoreload")
+    
+    # Get all matches including completed ones
+    def all_matches_filter(x):
+        # Include all matches that have results or are completed
+        if "state" in x:
+            return x["state"] in ["done", "active", "called", "ready", "available"]
+        return True
+    
+    all_matches = getAllTournamentsMatchesWithPlayers(filterFunction=all_matches_filter)
+    
+    # Get tournament names for display
+    tournament_names = {}
+    tournament_keys = settings.get('tournament_keys', [])
+    
+    for tournament in tournament_keys:
+        if tournament.get('tourn_type') == 'truefinals':
+            try:
+                tournament_details = getTournamentDetails(tournament['id'])
+                if tournament_details:
+                    if isinstance(tournament_details, list) and len(tournament_details) > 0:
+                        cache_entry = tournament_details[0]
+                        api_data = cache_entry.get('response', cache_entry)
+                    elif isinstance(tournament_details, dict):
+                        api_data = tournament_details.get('response', tournament_details)
+                    else:
+                        api_data = None
+                    
+                    if api_data and isinstance(api_data, dict):
+                        name_fields = ['title', 'name', 'tournamentName', 'event_name']
+                        tournament_name = None
+                        for field in name_fields:
+                            if field in api_data:
+                                tournament_name = api_data[field]
+                                break
+                        
+                        if tournament_name:
+                            tournament_names[tournament['id']] = tournament_name
+                        else:
+                            tournament_names[tournament['id']] = tournament.get('weightclass', f'Tournament {tournament["id"][:8]}')
+            except Exception:
+                tournament_names[tournament['id']] = tournament.get('weightclass', f'Tournament {tournament["id"][:8]}')
+        else:
+            tournament_names[tournament['id']] = tournament.get('weightclass', f'Tournament {tournament["id"]}')
+    
+    # Organize matches by tournament
+    tournaments_data = {}
+    
+    for match in all_matches:
+        tournament_id = match.get('tournamentID')
+        
+        # Apply tournament filter if specified
+        if tournament_filter and tournament_id != tournament_filter:
+            continue
+            
+        if tournament_id not in tournaments_data:
+            tournaments_data[tournament_id] = {
+                'id': tournament_id,
+                'name': tournament_names.get(tournament_id, f'Tournament {tournament_id[:8]}'),
+                'completed_matches': [],
+                'in_progress_matches': [],
+                'upcoming_matches': [],
+                'stats': {
+                    'total_matches': 0,
+                    'completed': 0,
+                    'in_progress': 0,
+                    'upcoming': 0
+                }
+            }
+        
+        # Add tournament display name to match
+        match['tournament_display_name'] = tournaments_data[tournament_id]['name']
+        
+        # Categorize matches
+        state = match.get('state', 'unknown')
+        if state == 'done':
+            tournaments_data[tournament_id]['completed_matches'].append(match)
+            tournaments_data[tournament_id]['stats']['completed'] += 1
+        elif state in ['active', 'called', 'ready']:
+            tournaments_data[tournament_id]['in_progress_matches'].append(match)
+            tournaments_data[tournament_id]['stats']['in_progress'] += 1
+        elif state == 'available':
+            tournaments_data[tournament_id]['upcoming_matches'].append(match)
+            tournaments_data[tournament_id]['stats']['upcoming'] += 1
+        
+        tournaments_data[tournament_id]['stats']['total_matches'] += 1
+    
+    # Sort matches within each tournament by completion time (most recent first) for completed,
+    # and by call time for in-progress
+    for tournament_data in tournaments_data.values():
+        # Sort completed matches by most recent first (if we had completion time)
+        tournament_data['completed_matches'].sort(
+            key=lambda x: x.get('calledSince', 0),
+            reverse=True
+        )
+        
+        # Sort in-progress by earliest called first
+        tournament_data['in_progress_matches'].sort(
+            key=lambda x: x.get('calledSince', 0),
+            reverse=False
+        )
+    
+    # Create list of tournaments for filter dropdown
+    available_tournaments = [
+        {'id': tid, 'name': data['name']} 
+        for tid, data in tournaments_data.items()
+    ]
+    available_tournaments.sort(key=lambda x: x['name'])
+    
+    return ac_render_template(
+        "queueing/fight_log.html",
+        tournaments_data=tournaments_data,
+        available_tournaments=available_tournaments,
+        current_filter=tournament_filter,
+        autoreload=autoreload,
+    )
+
+
 @match_results.errorhandler(500)
 def internal_error(error):
     autoreload = request.args.get("autoreload")

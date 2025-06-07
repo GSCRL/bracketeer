@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block bodysections %}
+
+{% if not show_header %} <!-- URLarg, may not be included all the time. -->
+<section class="hero is-primary">
+  <div class="hero-body">
+    <p class="title">
+      Fight Log
+    </p>
+    {% if arena_settings.event_name %}
+    <p class="subtitle">
+      {{ arena_settings.event_name }} | Complete match history
+    </p>
+    {% endif %}
+  </div>
+  
+  <!-- Tournament Filter -->
+  <div class="hero-foot">
+    <div class="container">
+      <div class="field is-grouped is-grouped-centered">
+        <div class="control">
+          <div class="select">
+            <select id="tournament-filter" onchange="filterTournament()">
+              <option value="">All Tournaments</option>
+              {% for tournament in available_tournaments %}
+              <option value="{{ tournament.id }}" {% if current_filter == tournament.id %}selected{% endif %}>
+                {{ tournament.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="control">
+          <a href="/matches/fight-log" class="button is-light">
+            <span class="icon"><i class="fas fa-sync-alt"></i></span>
+            <span>Refresh</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Tournament Summary Cards -->
+{% if tournaments_data %}
+<section class="section">
+  <div class="container">
+    <div class="columns is-multiline">
+      {% for tournament_id, tournament in tournaments_data.items() %}
+      <div class="column is-half">
+        <div class="card">
+          <div class="card-header">
+            <p class="card-header-title">
+              <span class="icon has-text-primary">
+                <i class="fas fa-trophy"></i>
+              </span>
+              {{ tournament.name }}
+            </p>
+          </div>
+          <div class="card-content">
+            <div class="content">
+              <!-- Tournament Statistics -->
+              <div class="field is-grouped is-grouped-multiline">
+                <div class="control">
+                  <div class="tags has-addons">
+                    <span class="tag">Total</span>
+                    <span class="tag is-primary">{{ tournament.stats.total_matches }}</span>
+                  </div>
+                </div>
+                <div class="control">
+                  <div class="tags has-addons">
+                    <span class="tag">Completed</span>
+                    <span class="tag is-success">{{ tournament.stats.completed }}</span>
+                  </div>
+                </div>
+                <div class="control">
+                  <div class="tags has-addons">
+                    <span class="tag">In Progress</span>
+                    <span class="tag is-warning">{{ tournament.stats.in_progress }}</span>
+                  </div>
+                </div>
+                <div class="control">
+                  <div class="tags has-addons">
+                    <span class="tag">Upcoming</span>
+                    <span class="tag is-info">{{ tournament.stats.upcoming }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Progress Bar -->
+              {% set completion_percent = (tournament.stats.completed / tournament.stats.total_matches * 100) if tournament.stats.total_matches > 0 else 0 %}
+              <progress class="progress is-primary" value="{{ tournament.stats.completed }}" max="{{ tournament.stats.total_matches }}">
+                {{ "%.1f"|format(completion_percent) }}%
+              </progress>
+              <p class="is-size-7 has-text-grey">{{ "%.1f"|format(completion_percent) }}% Complete</p>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="/matches/fight-log?tournament={{ tournament_id }}" class="card-footer-item">
+              View Details
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Detailed Match History -->
+{% for tournament_id, tournament in tournaments_data.items() %}
+<section class="section">
+  <div class="container">
+    <h2 class="title is-4">
+      <span class="icon has-text-primary">
+        <i class="fas fa-trophy"></i>
+      </span>
+      {{ tournament.name }}
+    </h2>
+    
+    <!-- Completed Matches -->
+    {% if tournament.completed_matches %}
+    <div class="box">
+      <h3 class="title is-5">
+        <span class="icon has-text-success">
+          <i class="fas fa-check-circle"></i>
+        </span>
+        Completed Matches ({{ tournament.stats.completed }})
+      </h3>
+      
+      <div class="table-container">
+        <table class="table is-fullwidth is-striped">
+          <thead>
+            <tr>
+              <th>Match</th>
+              <th>Red Robot</th>
+              <th>Blue Robot</th>
+              <th>Winner</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for match in tournament.completed_matches %}
+            <tr>
+              <td>
+                <strong>{{ match.name }}</strong>
+                <br>
+                <small class="has-text-grey">{{ match.weightclass }}</small>
+              </td>
+              <td>
+                {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
+                <div>
+                  <p class="has-text-weight-bold">🔴 {{ match.slots[0].bracketeer_player_data.name }}</p>
+                  <small class="has-text-grey">
+                    {{ match.slots[0].bracketeer_player_data.wins }}W-{{ match.slots[0].bracketeer_player_data.losses }}L-{{ match.slots[0].bracketeer_player_data.ties }}T
+                  </small>
+                </div>
+                {% else %}
+                <span class="has-text-grey">🔴 TBD</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
+                <div>
+                  <p class="has-text-weight-bold">🔵 {{ match.slots[1].bracketeer_player_data.name }}</p>
+                  <small class="has-text-grey">
+                    {{ match.slots[1].bracketeer_player_data.wins }}W-{{ match.slots[1].bracketeer_player_data.losses }}L-{{ match.slots[1].bracketeer_player_data.ties }}T
+                  </small>
+                </div>
+                {% else %}
+                <span class="has-text-grey">🔵 TBD</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if match.winner %}
+                  {% if match.winner == match.slots[0].id %}
+                    <span class="tag is-danger">🔴 Red Wins</span>
+                  {% elif match.winner == match.slots[1].id %}
+                    <span class="tag is-info">🔵 Blue Wins</span>
+                  {% else %}
+                    <span class="tag is-warning">{{ match.winner }}</span>
+                  {% endif %}
+                {% else %}
+                  <span class="tag is-light">No Result</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="tag is-success">{{ match.state|upper }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- In Progress Matches -->
+    {% if tournament.in_progress_matches %}
+    <div class="box">
+      <h3 class="title is-5">
+        <span class="icon has-text-warning">
+          <i class="fas fa-clock"></i>
+        </span>
+        In Progress ({{ tournament.stats.in_progress }})
+      </h3>
+      
+      <div class="table-container">
+        <table class="table is-fullwidth is-striped">
+          <thead>
+            <tr>
+              <th>Match</th>
+              <th>Red Robot</th>
+              <th>Blue Robot</th>
+              <th>Status</th>
+              <th>Called</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for match in tournament.in_progress_matches %}
+            <tr>
+              <td>
+                <strong>{{ match.name }}</strong>
+                <br>
+                <small class="has-text-grey">{{ match.weightclass }}</small>
+              </td>
+              <td>
+                {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
+                <div>
+                  <p class="has-text-weight-bold">🔴 {{ match.slots[0].bracketeer_player_data.name }}</p>
+                  <small class="has-text-grey">
+                    {{ match.slots[0].bracketeer_player_data.wins }}W-{{ match.slots[0].bracketeer_player_data.losses }}L-{{ match.slots[0].bracketeer_player_data.ties }}T
+                  </small>
+                </div>
+                {% else %}
+                <span class="has-text-grey">🔴 TBD</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
+                <div>
+                  <p class="has-text-weight-bold">🔵 {{ match.slots[1].bracketeer_player_data.name }}</p>
+                  <small class="has-text-grey">
+                    {{ match.slots[1].bracketeer_player_data.wins }}W-{{ match.slots[1].bracketeer_player_data.losses }}L-{{ match.slots[1].bracketeer_player_data.ties }}T
+                  </small>
+                </div>
+                {% else %}
+                <span class="has-text-grey">🔵 TBD</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if match.state == 'active' %}
+                  <span class="tag is-danger">FIGHTING</span>
+                {% elif match.state == 'called' %}
+                  <span class="tag is-warning">CALLED</span>
+                {% elif match.state == 'ready' %}
+                  <span class="tag is-info">READY</span>
+                {% else %}
+                  <span class="tag is-light">{{ match.state|upper }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if match.calledSince %}
+                  <span id="called_since_{{ match.tournamentID }}_{{ match.id }}">Called</span>
+                  <script>
+                    document.getElementById("called_since_{{ match.tournamentID }}_{{ match.id }}").innerHTML = time_ago({{ match.calledSince }}) + " ago";
+                  </script>
+                {% else %}
+                  <span class="has-text-grey">-</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Upcoming Matches Preview (limited) -->
+    {% if tournament.upcoming_matches %}
+    <div class="box">
+      <h3 class="title is-5">
+        <span class="icon has-text-info">
+          <i class="fas fa-list"></i>
+        </span>
+        Next Up ({{ tournament.stats.upcoming }} remaining)
+      </h3>
+      
+      <div class="columns is-multiline">
+        {% for match in tournament.upcoming_matches[:6] %}  <!-- Show first 6 upcoming -->
+        <div class="column is-half">
+          <div class="notification is-info is-light">
+            <div class="content">
+              <p class="has-text-weight-bold is-size-6">{{ match.name }}</p>
+              <p class="is-size-7 has-text-grey">{{ match.weightclass }}</p>
+              <div class="columns is-mobile">
+                <div class="column">
+                  {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
+                  <p>🔴 {{ match.slots[0].bracketeer_player_data.name }}</p>
+                  <small>{{ match.slots[0].bracketeer_player_data.wins }}W-{{ match.slots[0].bracketeer_player_data.losses }}L-{{ match.slots[0].bracketeer_player_data.ties }}T</small>
+                  {% else %}
+                  <p>🔴 TBD</p>
+                  {% endif %}
+                </div>
+                <div class="column">
+                  {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
+                  <p>🔵 {{ match.slots[1].bracketeer_player_data.name }}</p>
+                  <small>{{ match.slots[1].bracketeer_player_data.wins }}W-{{ match.slots[1].bracketeer_player_data.losses }}L-{{ match.slots[1].bracketeer_player_data.ties }}T</small>
+                  {% else %}
+                  <p>🔵 TBD</p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      
+      {% if tournament.upcoming_matches|length > 6 %}
+      <p class="has-text-centered">
+        <em>And {{ tournament.upcoming_matches|length - 6 }} more upcoming matches...</em>
+      </p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endfor %}
+
+{% else %}
+<!-- No Data Available -->
+<section class="section">
+  <div class="container has-text-centered">
+    <div class="notification is-info">
+      <p class="is-size-4">No match data available</p>
+      <p>Check your tournament configuration or try refreshing the page.</p>
+      <p class="is-size-2">🤖⚔️📊</p>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<script>
+function filterTournament() {
+    const select = document.getElementById('tournament-filter');
+    const selectedValue = select.value;
+    
+    if (selectedValue) {
+        window.location.href = '/matches/fight-log?tournament=' + selectedValue;
+    } else {
+        window.location.href = '/matches/fight-log';
+    }
+}
+
+// Time ago function for match called times
+function time_ago(timestamp) {
+    const now = Math.floor(Date.now() / 1000);
+    const diff = now - timestamp;
+    
+    if (diff < 60) return diff + 's';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+    return Math.floor(diff / 86400) + 'd';
+}
+</script>
+
+{% endblock %}
