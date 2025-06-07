@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import socket
 import sys
 import argparse
@@ -272,8 +273,13 @@ def main():
     """Main entry point for the application"""
     args = parse_arguments()
     
-    # Determine debug mode
-    debug_mode = True  # Default to True
+    # Determine debug mode based on environment and arguments
+    env = os.getenv('BRACKETEER_ENV', 'development')
+    debug_mode = True  # Default to True for development
+    
+    if env == 'production':
+        debug_mode = False  # Production default is no debug
+    
     if args.no_debug:
         debug_mode = False
     elif args.debug:

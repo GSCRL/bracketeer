@@ -5,15 +5,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 **Run the application:**
+
+*Development Mode (recommended for development/testing):*
+```bash
+# Quick start - development server with auto port detection
+./scripts/start-development.sh
+
+# Manual development server
+uv run bracketeer/__main__.py --dev
+
+# Custom development configuration
+uv run bracketeer/__main__.py --port 8080 --dev --debug
+```
+
+*Production Mode (recommended for tournaments/events):*
+```bash
+# Quick start - production server with Gunicorn
+./scripts/start-production.sh
+
+# Manual production server
+export BRACKETEER_ENV=production
+uv run gunicorn --config gunicorn.conf.py wsgi:application
+
+# Custom production configuration
+uv run gunicorn --bind 0.0.0.0:8080 --workers 1 --worker-class eventlet wsgi:application
+```
+
+*Legacy Development Server (for testing only):*
 ```bash
 # Default mode (port 80, fails if port in use)
 uv run bracketeer/__main__.py
-
-# Development mode (auto-find available port)
-uv run bracketeer/__main__.py --dev
-
-# Specify custom port
-uv run bracketeer/__main__.py --port 8080
 
 # Custom host and port
 uv run bracketeer/__main__.py --host 127.0.0.1 --port 5000
@@ -122,6 +143,55 @@ TrueFinals uses these official game states (use instead of custom status logic):
 - Handle `429 Too Many Requests` with exponential backoff
 - Graceful degradation when tournament details can't be fetched
 - Validate tournament IDs before making API calls (pattern: `^[a-zA-Z0-9-_]+$`)
+
+## Production Deployment
+
+### Web Server Configuration
+
+Bracketeer supports both development and production deployment modes:
+
+**Development Server (Flask built-in):**
+- Best for: Development, testing, debugging
+- Features: Auto-reload, detailed error pages, port auto-detection
+- Performance: Single-threaded, not suitable for multiple concurrent users
+- Usage: `./scripts/start-development.sh` or `uv run bracketeer/__main__.py --dev`
+
+**Production Server (Gunicorn + Eventlet):**
+- Best for: Tournaments, events, production environments
+- Features: Process management, logging, graceful shutdown, performance optimization
+- Performance: Optimized for real-time WebSocket connections and concurrent users
+- Usage: `./scripts/start-production.sh` or `uv run gunicorn --config gunicorn.conf.py wsgi:application`
+
+### Environment Configuration
+
+Set `BRACKETEER_ENV` environment variable:
+- `development` - Development mode with debug enabled by default
+- `production` - Production mode with debug disabled, optimized logging
+
+### Production Checklist
+
+1. **Install Dependencies:** `uv sync` (production dependencies only)
+2. **Configure Environment:** `export BRACKETEER_ENV=production`
+3. **Set Up Logging:** Ensure `logs/` directory exists and is writable
+4. **Network Configuration:** Configure firewall for port 80 (or custom port)
+5. **TrueFinals API:** Configure credentials via setup wizard or settings page
+6. **Start Server:** `./scripts/start-production.sh` or manual Gunicorn command
+7. **Monitor Logs:** Check `logs/access.log` and `logs/error.log` for issues
+
+### Performance Considerations
+
+- **Single Worker Required:** SocketIO requires single worker for WebSocket coordination
+- **EventLet Worker Class:** Required for real-time WebSocket communication
+- **Memory Usage:** Typical usage ~50-100MB per tournament
+- **CPU Usage:** Low during normal operation, spikes during match state changes
+- **Network:** Designed for local network deployment (tournament venue)
+
+### Security Notes
+
+- Default binding: `0.0.0.0:80` (all interfaces)
+- For internet deployment: Use reverse proxy (nginx) with SSL termination
+- API credentials stored in `.secrets.json` - ensure proper file permissions
+- No authentication required for local tournament network usage
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
