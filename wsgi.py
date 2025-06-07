@@ -7,6 +7,8 @@ separating it from the development server logic in __main__.py
 
 import logging
 import os
+
+# Import the Flask app and SocketIO instance
 from bracketeer.__main__ import app, socketio
 
 # Configure logging for production
@@ -27,8 +29,15 @@ if not app.debug:
     app.logger.setLevel(logging.INFO)
     app.logger.info('Bracketeer startup')
 
+def create_app():
+    """
+    Application factory that returns the SocketIO WSGI application.
+    This ensures proper initialization for production deployment.
+    """
+    return socketio
+
 # The WSGI application that Gunicorn will use
-application = socketio.wsgi_app
+application = create_app()
 
 if __name__ == "__main__":
     # This allows running the WSGI app directly for testing

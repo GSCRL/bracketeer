@@ -14,7 +14,7 @@ backlog = 2048
 
 # Worker processes
 workers = 1  # SocketIO requires single worker for WebSocket coordination
-worker_class = "eventlet"  # Required for Flask-SocketIO
+worker_class = "gevent"  # Alternative to eventlet for Flask-SocketIO
 worker_connections = 1000
 max_requests = 1000
 max_requests_jitter = 50
@@ -63,7 +63,7 @@ if os.getenv('BRACKETEER_ENV') == 'development':
     errorlog = '-'   # Log to stderr
 elif os.getenv('BRACKETEER_ENV') == 'production':
     workers = 1  # Still single worker for SocketIO
-    worker_class = "eventlet"
+    worker_class = "gevent"
     timeout = 60
     max_requests = 5000
     # Enable detailed logging in production

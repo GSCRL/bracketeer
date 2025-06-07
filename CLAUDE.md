@@ -12,35 +12,35 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./scripts/start-development.sh
 
 # Manual development server
-uv run bracketeer/__main__.py --dev
+python -m bracketeer --dev
 
 # Custom development configuration
-uv run bracketeer/__main__.py --port 8080 --dev --debug
+python -m bracketeer --port 8080 --dev --debug
 ```
 
 *Production Mode (recommended for tournaments/events):*
 ```bash
-# Quick start - production server with Gunicorn
+# Quick start - production server 
 ./scripts/start-production.sh
 
 # Manual production server
 export BRACKETEER_ENV=production
-uv run gunicorn --config gunicorn.conf.py wsgi:application
+python -m bracketeer --host 0.0.0.0 --port 80 --no-debug
 
 # Custom production configuration
-uv run gunicorn --bind 0.0.0.0:8080 --workers 1 --worker-class eventlet wsgi:application
+python -m bracketeer --host 0.0.0.0 --port 8080 --no-debug
 ```
 
-*Legacy Development Server (for testing only):*
+*Development Server Options:*
 ```bash
 # Default mode (port 80, fails if port in use)
-uv run bracketeer/__main__.py
+python -m bracketeer
 
 # Custom host and port
-uv run bracketeer/__main__.py --host 127.0.0.1 --port 5000
+python -m bracketeer --host 127.0.0.1 --port 5000
 
-# Disable debug mode
-uv run bracketeer/__main__.py --no-debug
+# Enable debug mode explicitly
+python -m bracketeer --debug
 ```
 
 **Install dependencies (development):**
@@ -75,9 +75,10 @@ Bracketeer is a Flask-based web application for combat robotics tournament manag
 
 **Key Blueprints:**
 - `/screens/*` - Timer displays and stream overlays
-- `/matches/*` - Match results and bracket management  
+- `/matches/*` - Match results, bracket management, fight log, and upcoming matches
 - `/debug/*` - Development and debugging tools
 - `/control/<cageID>` - Judge timer control interface
+- `/setup/*` - Setup wizard for initial configuration
 
 **Data Flow:**
 1. Tournament data pulled from TrueFinals/Challonge APIs and cached
@@ -144,23 +145,45 @@ TrueFinals uses these official game states (use instead of custom status logic):
 - Graceful degradation when tournament details can't be fetched
 - Validate tournament IDs before making API calls (pattern: `^[a-zA-Z0-9-_]+$`)
 
+## Testing
+
+### Comprehensive Test Suite
+
+The project includes extensive testing infrastructure:
+
+**Run all tests:**
+```bash
+uv run pytest
+```
+
+**Test categories:**
+- **Unit Tests:** Core functionality, API integrations, match management
+- **Integration Tests:** SocketIO real-time communication, multi-browser scenarios  
+- **End-to-End Tests:** Full workflow testing with Playwright browser automation
+
+**Key Test Files:**
+- `tests/test_fight_log.py` - Fight log functionality and tournament filtering
+- `tests/test_match_queue.py` - Match queue enhancements and upcoming matches
+- `tests/test_homepage_dashboard.py` - Dashboard functionality and tournament display
+- `tests/test_socketio_integration.py` - Real-time SocketIO communication testing
+
 ## Production Deployment
 
 ### Web Server Configuration
 
-Bracketeer supports both development and production deployment modes:
+Bracketeer uses Flask-SocketIO's built-in production server for optimal real-time performance:
 
-**Development Server (Flask built-in):**
+**Development Server:**
 - Best for: Development, testing, debugging
 - Features: Auto-reload, detailed error pages, port auto-detection
-- Performance: Single-threaded, not suitable for multiple concurrent users
-- Usage: `./scripts/start-development.sh` or `uv run bracketeer/__main__.py --dev`
+- Performance: Single-threaded, includes development debugging
+- Usage: `./scripts/start-development.sh` or `python -m bracketeer --dev`
 
-**Production Server (Gunicorn + Eventlet):**
-- Best for: Tournaments, events, production environments
-- Features: Process management, logging, graceful shutdown, performance optimization
-- Performance: Optimized for real-time WebSocket connections and concurrent users
-- Usage: `./scripts/start-production.sh` or `uv run gunicorn --config gunicorn.conf.py wsgi:application`
+**Production Server:**
+- Best for: Tournaments, events, production environments  
+- Features: Optimized for real-time SocketIO, production logging
+- Performance: Designed for concurrent users and real-time WebSocket connections
+- Usage: `./scripts/start-production.sh` or `python -m bracketeer --host 0.0.0.0 --port 80 --no-debug`
 
 ### Environment Configuration
 
@@ -172,26 +195,34 @@ Set `BRACKETEER_ENV` environment variable:
 
 1. **Install Dependencies:** `uv sync` (production dependencies only)
 2. **Configure Environment:** `export BRACKETEER_ENV=production`
-3. **Set Up Logging:** Ensure `logs/` directory exists and is writable
-4. **Network Configuration:** Configure firewall for port 80 (or custom port)
-5. **TrueFinals API:** Configure credentials via setup wizard or settings page
-6. **Start Server:** `./scripts/start-production.sh` or manual Gunicorn command
-7. **Monitor Logs:** Check `logs/access.log` and `logs/error.log` for issues
+3. **Network Configuration:** Configure firewall for port 80 (or custom port)
+4. **TrueFinals API:** Configure credentials via setup wizard (`/setup`) or settings page (`/settings`)
+5. **Start Server:** `./scripts/start-production.sh`
+6. **Verify Operation:** Check homepage shows tournaments and match queue functions
 
 ### Performance Considerations
 
-- **Single Worker Required:** SocketIO requires single worker for WebSocket coordination
-- **EventLet Worker Class:** Required for real-time WebSocket communication
+- **Flask-SocketIO Production Mode:** Optimized for real-time WebSocket communication
 - **Memory Usage:** Typical usage ~50-100MB per tournament
-- **CPU Usage:** Low during normal operation, spikes during match state changes
+- **CPU Usage:** Low during normal operation, spikes during match state changes  
 - **Network:** Designed for local network deployment (tournament venue)
+- **API Caching:** SQLite-based caching reduces TrueFinals API load
 
 ### Security Notes
 
 - Default binding: `0.0.0.0:80` (all interfaces)
 - For internet deployment: Use reverse proxy (nginx) with SSL termination
-- API credentials stored in `.secrets.json` - ensure proper file permissions
+- API credentials stored in `.secrets.json` - ensure proper file permissions (600)
 - No authentication required for local tournament network usage
+
+### Key Features Added
+
+- **Fight Log System:** Complete match history and robot records (`/matches/fight-log`)
+- **Enhanced Match Queue:** Tournament context and "on deck" indicators (`/matches/upcoming`) 
+- **Setup Wizard:** Guided initial configuration (`/setup`)
+- **Production Scripts:** Automated deployment with `./scripts/start-production.sh`
+- **Port Auto-Detection:** Development mode automatically finds available ports
+- **Enhanced Dashboard:** Tournament overview with real tournament names from API
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.

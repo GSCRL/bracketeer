@@ -17,10 +17,9 @@ mkdir -p logs
 echo "Installing production dependencies..."
 uv sync
 
-# Start with Gunicorn
+# Start with Flask-SocketIO in production mode
 echo "Starting Bracketeer in production mode..."
 echo "Server will be available at http://0.0.0.0:80"
-echo "Logs will be written to logs/access.log and logs/error.log"
-echo "To stop the server, use: kill \$(cat bracketeer.pid)"
+echo "To stop the server, use Ctrl+C"
 
-uv run gunicorn --config gunicorn.conf.py wsgi:application
+python -m bracketeer --host 0.0.0.0 --port 80 --no-debug
