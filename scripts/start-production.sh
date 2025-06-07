@@ -1,10 +1,10 @@
 #!/bin/bash
-"""
-Production startup script for Bracketeer using Gunicorn.
-
-This script starts Bracketeer in production mode with proper logging
-and process management.
-"""
+#
+# Production startup script for Bracketeer using Gunicorn.
+#
+# This script starts Bracketeer in production mode with proper logging
+# and process management.
+#
 
 # Set environment variables
 export BRACKETEER_ENV=production

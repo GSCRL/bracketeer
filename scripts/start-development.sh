@@ -1,10 +1,10 @@
 #!/bin/bash
-"""
-Development startup script for Bracketeer.
-
-This script starts Bracketeer in development mode with auto-reload
-and the built-in Flask development server.
-"""
+#
+# Development startup script for Bracketeer.
+#
+# This script starts Bracketeer in development mode with auto-reload
+# and the built-in Flask development server.
+#
 
 # Set environment variables
 export BRACKETEER_ENV=development
