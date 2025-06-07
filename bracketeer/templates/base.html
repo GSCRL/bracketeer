@@ -152,6 +152,13 @@ $navbarBurgers.forEach( el => {
   });
 });
 
+// Make flash message delete buttons work
+document.querySelectorAll('.message .delete').forEach(function(deleteButton) {
+  deleteButton.addEventListener('click', function() {
+    deleteButton.closest('.message').remove();
+  });
+});
+
 });
 </script>
 <script type="text/javascript" charset="utf-8">
@@ -235,15 +242,27 @@ $navbarBurgers.forEach( el => {
 
 <!-- Start Body Block from base.html -->
 
-{% with messages = get_flashed_messages() %}
+{% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
   <div class="section">
     <ul class=flashes>
-      {% for message in messages %}
+      {% for category, message in messages %}
+      {% set message_class = 'is-danger' %}
+      {% set message_title = 'Error' %}
+      {% if category == 'success' %}
+        {% set message_class = 'is-success' %}
+        {% set message_title = 'Success' %}
+      {% elif category == 'warning' %}
+        {% set message_class = 'is-warning' %}
+        {% set message_title = 'Warning' %}
+      {% elif category == 'info' %}
+        {% set message_class = 'is-info' %}
+        {% set message_title = 'Info' %}
+      {% endif %}
   
-      <article class="message is-danger">
+      <article class="message {{ message_class }}">
         <div class="message-header">
-          <p>Danger</p>
+          <p>{{ message_title }}</p>
           <button class="delete" aria-label="delete"></button>
         </div>
         <div class="message-body">

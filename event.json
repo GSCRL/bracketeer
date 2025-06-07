@@ -1,16 +1,27 @@
 {
-    "event_name": "Test Event",
-    "match_duration": 150,
-    "countdown_duration":3,
-    "event_league": "GDQ9999",
-    "tournament_keys": [
-        {"id":"2146ec5eb37a47ba", "weightclass": "BTL", "weightInt": 1360, "tourn_type":"truefinals"},
-        {"id":"3a3d36b1473c4b9d", "weightclass":"PLANT", "weightInt": 453, "tourn_type":"truefinals"},
-        {"id":"9d1f08d48c3945de", "weightclass": "ANT", "weightInt":452, "tourn_type":"truefinals"},
-        {"id":"c1d13538e2fe4677", "weightclass": "TEST", "weightInt":9999, "tourn_type":"challonge"}
-    ],
-    "tournament_cages":[
-        {"name": "Classic [Red]", "id": 1},
-        {"name": "Borrowed [Black]", "id": 2}
-    ]
+  "event_name": "June Jumble 2025",
+  "event_league": "GDQ9999",
+  "event_date": "2025-06-07",
+  "match_duration": 150,
+  "countdown_duration": 3,
+  "tournament_keys": [
+    {
+      "id": "bb6ccd1f72f24242",
+      "tourn_type": "truefinals",
+      "weightInt": 0,
+      "weightclass": "Tournament bb6ccd1f72f24242"
+    },
+    {
+      "id": "a2be9a1941f044cc",
+      "tourn_type": "truefinals",
+      "weightInt": 0,
+      "weightclass": "Tournament a2be9a1941f044cc"
+    }
+  ],
+  "tournament_cages": [
+    {
+      "name": "Main Arena",
+      "id": 1
+    }
+  ]
 }

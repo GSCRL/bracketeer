@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block bodysections %}
+<section class="section">
+    <div class="container">
+        <nav class="breadcrumb" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="{{ url_for('setup_wizard.wizard_start') }}">Setup</a></li>
+                <li><a href="{{ url_for('setup_wizard.wizard_credentials') }}">Credentials</a></li>
+                <li><a href="{{ url_for('setup_wizard.wizard_event') }}">Event Setup</a></li>
+                <li class="is-active"><a href="#" aria-current="page">Tournaments</a></li>
+                <li>Confirm</li>
+                <li>Complete</li>
+            </ul>
+        </nav>
+
+        <div class="card">
+            <div class="card-header">
+                <p class="card-header-title">
+                    Step 3: Select Tournaments for {{ event_info.event_name }}
+                </p>
+            </div>
+            <div class="card-content">
+                <form method="POST">
+                    <div class="content">
+                        <p>Select the tournaments you want to include in your event and configure their weight classes.</p>
+                        
+                        <div class="notification is-info is-light">
+                            <h5 class="title is-6">💡 Can't find your tournament?</h5>
+                            <p>The API only shows tournaments you <strong>created</strong>. If you're managing a tournament created by someone else, you can add it manually below:</p>
+                            
+                            <div class="field has-addons" style="margin-top: 1rem;">
+                                <div class="control is-expanded">
+                                    <input class="input" type="text" id="manual_tournament_id" placeholder="Tournament ID (e.g., 250968edf15b42fd)" pattern="^[a-zA-Z0-9-_]+$">
+                                </div>
+                                <div class="control">
+                                    <button class="button is-info" type="button" onclick="addManualTournament()">
+                                        <span class="icon">
+                                            <i class="fas fa-plus"></i>
+                                        </span>
+                                        <span>Add Tournament</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="help">Get the tournament ID from the URL: truefinals.com/tournament/<strong>250968edf15b42fd</strong></p>
+                        </div>
+                    </div>
+                        
+                        {% if tournaments %}
+                        <div class="notification is-success is-light">
+                            <strong>✓ Connected to TrueFinals!</strong> Found {{ tournaments|length }} upcoming/active tournament(s).
+                        </div>
+                        <div class="notification is-info is-light">
+                            <strong>📅 Sorted by most recent first</strong> - Scheduled tournaments appear first, then most recently created.
+                            {% if tournaments|length >= 3 %}
+                            The latest 3 tournaments are pre-selected by default.
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <div class="notification is-warning">
+                            <strong>No active tournaments found.</strong> Make sure you have upcoming or active tournaments in your TrueFinals account. Completed tournaments are hidden.
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div id="tournaments-container">
+                    {% if tournaments %}
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-striped">
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th>Tournament Name</th>
+                                    <th>Status</th>
+                                    <th>Players</th>
+                                    <th>Location</th>
+                                    <th>Weight Class Name</th>
+                                    <th>Weight (grams)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for tournament in tournaments %}
+                                <tr>
+                                    <td>
+                                        <label class="checkbox">
+                                            <input type="checkbox" name="tournament_{{ tournament.id }}" value="1" {% if loop.index <= 3 %}checked{% endif %}>
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <strong>{{ tournament.display_name }}</strong>
+                                        <br>
+                                        <small class="has-text-grey">ID: {{ tournament.id }}</small>
+                                        {% if tournament.description %}
+                                        <br>
+                                        <small class="has-text-grey-light">{{ tournament.description[:50] }}{% if tournament.description|length > 50 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="tag {% if tournament.status == 'active' %}is-success{% elif tournament.status == 'completed' %}is-dark{% elif tournament.status == 'scheduled' %}is-info{% else %}is-warning{% endif %}">
+                                            {{ tournament.status|default('unknown') }}
+                                        </span>
+                                    </td>
+                                    <td>{{ tournament.player_count|default('?') }}</td>
+                                    <td>
+                                        {% if tournament.event_location %}
+                                        {{ tournament.event_location }}
+                                        {% else %}
+                                        <span class="has-text-grey-light">Not specified</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="field">
+                                            <div class="control">
+                                                <input class="input is-small" type="text" name="weightclass_{{ tournament.id }}" 
+                                                       placeholder="e.g., 3lb, 12lb, Beetle" maxlength="20">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="field">
+                                            <div class="control">
+                                                <input class="input is-small" type="number" name="weight_{{ tournament.id }}" 
+                                                       placeholder="1360" min="1" max="99999">
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="notification is-info is-light">
+                        <strong>💡 Tips:</strong>
+                        <ul>
+                            <li>Weight class names are used for display (e.g., "3lb", "Beetle", "Ant")</li>
+                            <li>Weight in grams is used for sorting (e.g., 1360g for 3lb class)</li>
+                            <li>Only select tournaments you want to display in Bracketeer</li>
+                        </ul>
+                    </div>
+
+                    <div class="field is-grouped">
+                        <div class="control">
+                            <button class="button is-primary" type="submit">
+                                Continue to Confirmation
+                            </button>
+                        </div>
+                        <div class="control">
+                            <a class="button is-light" href="{{ url_for('setup_wizard.wizard_event') }}">
+                                Back
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="field is-grouped">
+                        <div class="control">
+                            <a class="button is-light" href="{{ url_for('setup_wizard.wizard_credentials') }}">
+                                Back to Credentials
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    </div> <!-- End tournaments-container -->
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function addManualTournament() {
+    const tournamentId = document.getElementById('manual_tournament_id').value.trim();
+    
+    // Validate tournament ID format
+    const pattern = /^[a-zA-Z0-9-_]+$/;
+    if (!tournamentId || !pattern.test(tournamentId)) {
+        alert('Please enter a valid tournament ID (letters, numbers, hyphens, and underscores only)');
+        return;
+    }
+    
+    // Check if tournament already exists in the table
+    const existingInputs = document.querySelectorAll('input[name^="tournament_"]');
+    for (const input of existingInputs) {
+        if (input.name === `tournament_${tournamentId}`) {
+            alert('Tournament already added!');
+            return;
+        }
+    }
+    
+    // Add loading state
+    const button = document.querySelector('button[onclick="addManualTournament()"]');
+    const originalContent = button.innerHTML;
+    button.innerHTML = '<span class="icon"><i class="fas fa-spinner fa-pulse"></i></span><span>Loading...</span>';
+    button.disabled = true;
+    
+    // Fetch tournament details
+    fetch(`/setup/api/debug-tournament/${tournamentId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(`Error: ${data.error}`);
+                return;
+            }
+            
+            const tournamentDetails = data.details_data && data.details_data[0] ? data.details_data[0].response : null;
+            const tournamentName = tournamentDetails ? tournamentDetails.title : tournamentId;
+            const playerCount = tournamentDetails && tournamentDetails.players ? tournamentDetails.players.length : '?';
+            const eventLocation = tournamentDetails ? tournamentDetails.eventLocation : '';
+            
+            // Add tournament to table
+            addTournamentToTable(tournamentId, tournamentName, playerCount, eventLocation);
+            
+            // Clear input
+            document.getElementById('manual_tournament_id').value = '';
+        })
+        .catch(error => {
+            console.error('Error fetching tournament:', error);
+            alert('Error fetching tournament details. You can still add it manually.');
+            // Add with basic info as fallback
+            addTournamentToTable(tournamentId, tournamentId, '?', '');
+        })
+        .finally(() => {
+            // Restore button
+            button.innerHTML = originalContent;
+            button.disabled = false;
+        });
+}
+
+function addTournamentToTable(tournamentId, tournamentName, playerCount, eventLocation) {
+    const container = document.getElementById('tournaments-container');
+    
+    // Create table if it doesn't exist
+    let table = container.querySelector('table');
+    if (!table) {
+        const tableContainer = document.createElement('div');
+        tableContainer.className = 'table-container';
+        tableContainer.innerHTML = `
+            <table class="table is-fullwidth is-striped">
+                <thead>
+                    <tr>
+                        <th>Select</th>
+                        <th>Tournament Name</th>
+                        <th>Status</th>
+                        <th>Players</th>
+                        <th>Location</th>
+                        <th>Weight Class Name</th>
+                        <th>Weight (grams)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        `;
+        container.appendChild(tableContainer);
+        table = tableContainer.querySelector('table');
+    }
+    
+    const tbody = table.querySelector('tbody');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>
+            <label class="checkbox">
+                <input type="checkbox" name="tournament_${tournamentId}" value="1" checked>
+            </label>
+        </td>
+        <td>
+            <strong>${tournamentName}</strong>
+            <br>
+            <small class="has-text-grey">ID: ${tournamentId}</small>
+            <br>
+            <small class="has-text-success">✓ Manually added</small>
+        </td>
+        <td>
+            <span class="tag is-info">manual</span>
+        </td>
+        <td>${playerCount}</td>
+        <td>
+            ${eventLocation || '<span class="has-text-grey-light">Not specified</span>'}
+        </td>
+        <td>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-small" type="text" name="weightclass_${tournamentId}" 
+                           placeholder="e.g., 3lb, 12lb, Beetle" maxlength="20">
+                </div>
+            </div>
+        </td>
+        <td>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-small" type="number" name="weight_${tournamentId}" 
+                           placeholder="1360" min="1" max="99999">
+                </div>
+            </div>
+        </td>
+    `;
+    
+    tbody.appendChild(row);
+}
+
+// Handle Enter key in manual tournament input
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('manual_tournament_id');
+    if (input) {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addManualTournament();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

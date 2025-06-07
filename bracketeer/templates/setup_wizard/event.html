@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block bodysections %}
+<section class="section">
+    <div class="container">
+        <nav class="breadcrumb" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="{{ url_for('setup_wizard.wizard_start') }}">Setup</a></li>
+                <li><a href="{{ url_for('setup_wizard.wizard_credentials') }}">Credentials</a></li>
+                <li class="is-active"><a href="#" aria-current="page">Event Setup</a></li>
+                <li>Tournaments</li>
+                <li>Confirm</li>
+                <li>Complete</li>
+            </ul>
+        </nav>
+
+        <div class="card">
+            <div class="card-header">
+                <p class="card-header-title">
+                    Step 2: Event Setup
+                </p>
+            </div>
+            <div class="card-content">
+                <form method="POST">
+                    <div class="content">
+                        <p>Set up your event details. This information will be used throughout Bracketeer.</p>
+                    </div>
+
+                    <!-- Event Details -->
+                    <div class="field">
+                        <label class="label" for="event_name">Event Name</label>
+                        <div class="control">
+                            <input class="input" type="text" id="event_name" name="event_name" 
+                                   value="{{ current_event_name }}" placeholder="e.g., GSCRL June Jumble" required>
+                        </div>
+                    </div>
+
+                    <div class="columns">
+                        <div class="column">
+                            <div class="field">
+                                <label class="label" for="event_league">League/Organization</label>
+                                <div class="control">
+                                    <input class="input" type="text" id="event_league" name="event_league" 
+                                           value="{{ current_event_league }}" placeholder="e.g., GSCRL">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="field">
+                                <label class="label" for="event_date">Event Date</label>
+                                <div class="control">
+                                    <input class="input" type="date" id="event_date" name="event_date" 
+                                           placeholder="Select event date">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="columns">
+                        <div class="column">
+                            <div class="field">
+                                <label class="label" for="match_duration">Match Duration (seconds)</label>
+                                <div class="control">
+                                    <input class="input" type="number" id="match_duration" name="match_duration" 
+                                           value="{{ current_match_duration }}" placeholder="150" min="30" max="600">
+                                </div>
+                                <p class="help">150 seconds = 2 minutes 30 seconds</p>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="field">
+                                <label class="label" for="countdown_duration">Countdown Duration (seconds)</label>
+                                <div class="control">
+                                    <input class="input" type="number" id="countdown_duration" name="countdown_duration" 
+                                           value="{{ current_countdown_duration }}" placeholder="3" min="1" max="10">
+                                </div>
+                                <p class="help">Pre-match countdown timer</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Arena/Cage Configuration -->
+                    <div class="field">
+                        <label class="label" for="cage_count">Number of Arenas/Cages</label>
+                        <div class="control">
+                            <div class="select">
+                                <select id="cage_count" name="cage_count">
+                                    <option value="1">1 Arena</option>
+                                    <option value="2">2 Arenas</option>
+                                    <option value="3">3 Arenas</option>
+                                    <option value="4">4 Arenas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <p class="help">Most events use 1-2 arenas. Multiple arenas allow concurrent matches.</p>
+                    </div>
+
+                    <div class="field is-grouped">
+                        <div class="control">
+                            <button class="button is-primary is-large" type="submit">
+                                Continue to Tournament Selection
+                            </button>
+                        </div>
+                        <div class="control">
+                            <a class="button is-light" href="{{ url_for('setup_wizard.wizard_credentials') }}">
+                                Back
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function updateCageFields() {
+    const cageCount = parseInt(document.getElementById('cage_count').value);
+    const container = document.getElementById('cage_fields');
+    
+    // Clear existing fields
+    container.innerHTML = '';
+    
+    // Add fields for each cage
+    for (let i = 1; i <= cageCount; i++) {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'field cage-field';
+        fieldDiv.setAttribute('data-cage', i);
+        
+        const defaultNames = ['Main Arena', 'Secondary Arena', 'Arena 3', 'Arena 4'];
+        const defaultName = defaultNames[i-1] || `Arena ${i}`;
+        
+        fieldDiv.innerHTML = `
+            <label class="label" for="cage_name_${i}">Arena ${i} Name</label>
+            <div class="control">
+                <input class="input" type="text" id="cage_name_${i}" name="cage_name_${i}" 
+                       value="${defaultName}" placeholder="e.g., Main Arena, Red Box">
+            </div>
+        `;
+        
+        container.appendChild(fieldDiv);
+    }
+}
+
+// Initialize cage fields on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateCageFields();
+});
+</script>
+{% endblock %}

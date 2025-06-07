@@ -82,16 +82,33 @@
     <div class="block">
         <h2 class="subtitle">TrueFinals API Keys</h2>
     </div>
-    <div class="block">
-        <p>
-            <input class="input" type="text" id="truefinals_user_id" value="{{ arena_secrets.truefinals.user_id }}">
-        </p>
-    </div>
-    <div class="block">
-        <p>
-            <input class="input" type="text"  id="truefinals_api_key" value="{{ arena_secrets.truefinals.api_key }}">
-        </p>
-    </div>
+    <form method="POST">
+        <div class="field">
+            <label class="label" for="truefinals_user_id">TrueFinals User ID</label>
+            <div class="control">
+                <input class="input" type="text" id="truefinals_user_id" name="truefinals_user_id" value="{{ arena_secrets.truefinals.user_id }}" placeholder="Enter your TrueFinals user ID">
+            </div>
+        </div>
+        <div class="field">
+            <label class="label" for="truefinals_api_key">TrueFinals API Key</label>
+            <div class="control has-icons-right">
+                <input class="input" type="password" id="truefinals_api_key" name="truefinals_api_key" value="{{ arena_secrets.truefinals.api_key }}" placeholder="Enter your TrueFinals API key">
+                <span class="icon is-small is-right" style="cursor: pointer;" onclick="togglePasswordVisibility('truefinals_api_key')">
+                    <i class="fas fa-eye" id="truefinals_api_key_icon"></i>
+                </span>
+            </div>
+        </div>
+        <div class="field">
+            <div class="control">
+                <button class="button is-primary" type="submit">
+                    Save TrueFinals Credentials
+                </button>
+                <a class="button is-light" href="/setup">
+                    Setup Wizard
+                </a>
+            </div>
+        </div>
+    </form>
 </section>
      
 <!-- OBS Websocket Config-->
@@ -146,3 +163,18 @@
 
 
 {% endblock %}
+
+<script>
+function togglePasswordVisibility(fieldId) {
+    const field = document.getElementById(fieldId);
+    const icon = document.getElementById(fieldId + '_icon');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        field.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+</script>

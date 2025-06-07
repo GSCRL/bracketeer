@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block bodysections %}
+<section class="section">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-half">
+                <div class="card">
+                    <div class="card-header">
+                        <p class="card-header-title is-centered">
+                            🏆 Bracketeer Setup Wizard
+                        </p>
+                    </div>
+                    <div class="card-content">
+                        <div class="content">
+                            <h3 class="title is-4">Welcome to Bracketeer!</h3>
+                            
+                            {% if configured %}
+                            <div class="notification is-success">
+                                <strong>✓ Already configured!</strong> Your event is set up and ready to go.
+                            </div>
+                            <p>You can run the setup wizard again to reconfigure your event, or go directly to the main application.</p>
+                            {% else %}
+                            <div class="notification is-info">
+                                <strong>First time setup required.</strong> This wizard will help you configure Bracketeer for your tournament.
+                            </div>
+                            <p>This setup wizard will help you:</p>
+                            <ul>
+                                <li>Configure your TrueFinals API credentials</li>
+                                <li>Select tournaments from your TrueFinals account</li>
+                                <li>Set up event details and arena configuration</li>
+                                <li>Test your configuration</li>
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="card-footer-item">
+                            <div class="field is-grouped">
+                                {% if configured %}
+                                <p class="control">
+                                    <a class="button is-primary" href="/">
+                                        <span>Go to Main App</span>
+                                    </a>
+                                </p>
+                                <p class="control">
+                                    <a class="button is-light" href="{{ url_for('setup_wizard.wizard_credentials') }}">
+                                        <span>Reconfigure</span>
+                                    </a>
+                                </p>
+                                {% else %}
+                                <p class="control">
+                                    <a class="button is-primary is-large" href="{{ url_for('setup_wizard.wizard_credentials') }}">
+                                        <span>Start Setup</span>
+                                    </a>
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

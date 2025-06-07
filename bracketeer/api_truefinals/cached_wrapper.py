@@ -53,10 +53,20 @@ def getAllTournamentsPlayers():
 
         for loc in _current_data[0]["response"]:
             # print(loc)
-            loc["root_tournament_fk"] = _current_fk
-            loc["staleness_time"] = _current_data[0]["last_requested"]
-
-            output_structure.append(loc)
+            # Safety check: ensure loc is a dictionary before trying to assign to it
+            if isinstance(loc, dict):
+                loc["root_tournament_fk"] = _current_fk
+                loc["staleness_time"] = _current_data[0]["last_requested"]
+                output_structure.append(loc)
+            else:
+                # If loc is not a dict (e.g., it's a string ID), convert it to a dict
+                player_dict = {
+                    "id": loc,
+                    "name": str(loc),  # Use ID as name fallback
+                    "root_tournament_fk": _current_fk,
+                    "staleness_time": _current_data[0]["last_requested"]
+                }
+                output_structure.append(player_dict)
 
     # Reset this so we can re-analyze stuff and sanely interact with the data backed by the cache.
     # for item in output_structure:
