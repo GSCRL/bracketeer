@@ -93,13 +93,13 @@ def _json_api_stub():
     # Sort each category
     # Active: by how long they've been active (newest first)
     organized_matches['active'].sort(
-        key=lambda x: x.get('calledSince', 0),
+        key=lambda x: x.get('calledSince') or 0,
         reverse=True
     )
     
     # On deck: by how long they've been called (oldest first - first called fights first)
     organized_matches['on_deck'].sort(
-        key=lambda x: x.get('calledSince', 0),
+        key=lambda x: x.get('calledSince') or 0,
         reverse=False
     )
     
@@ -294,15 +294,15 @@ def routeForFightLog():
     # Sort matches within each tournament by completion time (most recent first) for completed,
     # and by call time for in-progress
     for tournament_data in tournaments_data.values():
-        # Sort completed matches by most recent first (if we had completion time)
+        # Sort completed matches by most recent first (handle None values)
         tournament_data['completed_matches'].sort(
-            key=lambda x: x.get('calledSince', 0),
+            key=lambda x: x.get('calledSince') or 0,
             reverse=True
         )
         
-        # Sort in-progress by earliest called first
+        # Sort in-progress by earliest called first (handle None values)
         tournament_data['in_progress_matches'].sort(
-            key=lambda x: x.get('calledSince', 0),
+            key=lambda x: x.get('calledSince') or 0,
             reverse=False
         )
     
