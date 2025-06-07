@@ -60,3 +60,58 @@ Bracketeer is a Flask-based web application for combat robotics tournament manag
 - Host computer must use static IP (default: 192.168.8.250)
 - Clients connect to timer displays over local network
 - Application serves on port 80 by default
+
+## TrueFinals API Best Practices
+
+### API Endpoints Available (Read-Only)
+
+**Tournament Discovery:**
+- `GET /v1/user/tournaments` - Returns tournaments you **own/created** (not all accessible tournaments)
+- `GET /v1/tournaments/{tournamentID}` - Full tournament data by ID
+
+**Tournament Data:**
+- `GET /v1/tournaments/{tournamentID}/details` - Lightweight tournament metadata
+- `GET /v1/tournaments/{tournamentID}/games` - All matches/games  
+- `GET /v1/tournaments/{tournamentID}/players` - Participant list
+- `GET /v1/tournaments/{tournamentID}/locations` - Arena/venue information
+- `GET /v1/tournaments/{tournamentID}/format` - Bracket format details
+- `GET /v1/tournaments/{tournamentID}/overlayParams` - Stream overlay data
+
+### Game States
+TrueFinals uses these official game states (use instead of custom status logic):
+- `"unavailable"` - Not ready to play
+- `"available"` - Ready to be called  
+- `"called"` - Called to arena, waiting for players
+- `"active"` - Currently being played
+- `"hold"` - Temporarily paused
+- `"done"` - Completed
+
+### Rate Limiting Best Practices
+- **Limit**: ~10 requests per 10 seconds (shared with web interface usage)
+- **Strategy**: Use caching extensively (current SQLite implementation is good)
+- **Bulk Operations**: Prefer single tournament details call over multiple individual calls
+- **Polling**: Use reasonable intervals (current 15s for games, 5min for players is appropriate)
+
+### Tournament Discovery Limitation
+**Important**: `/v1/user/tournaments` only returns tournaments you **created/own**, not tournaments where you're a participant or have admin access. For tournaments where you're not the creator:
+- Users must manually enter tournament IDs
+- Consider adding manual tournament entry feature in setup wizard
+- Tournament URLs follow pattern: `https://truefinals.com/tournament/{tournamentID}`
+
+### Data Optimization Opportunities
+1. **Use `/tournaments/{id}/details`** for lightweight metadata instead of full tournament call
+2. **Implement `/tournaments/{id}/locations`** to map games to physical arenas
+3. **Use official game states** instead of time-based status calculation
+4. **Cache player data longer** (players change infrequently vs games)
+5. **Implement overlay data** for streaming integration
+
+### Error Handling
+- Handle `429 Too Many Requests` with exponential backoff
+- Graceful degradation when tournament details can't be fetched
+- Validate tournament IDs before making API calls (pattern: `^[a-zA-Z0-9-_]+$`)
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
