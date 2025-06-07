@@ -1,5 +1,8 @@
 import json
 import logging
+import socket
+import sys
+import argparse
 
 from flask import Flask, jsonify, request
 from flask_socketio import SocketIO
@@ -14,6 +17,91 @@ from bracketeer.utils import runtime_err_warn
 logging.basicConfig(level="INFO")
 
 current_clients = {}
+
+
+def is_port_available(host, port):
+    """Check if a port is available for binding"""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.bind((host, port))
+            return True
+    except OSError:
+        return False
+
+
+def find_available_port(host, preferred_port, port_range=(5000, 9000)):
+    """Find an available port, starting with preferred_port"""
+    # First try the preferred port
+    if is_port_available(host, preferred_port):
+        return preferred_port
+    
+    logging.warning(f"Port {preferred_port} is not available, searching for alternative...")
+    
+    # Try common development ports first
+    common_ports = [5000, 8000, 8080, 3000, 4000, 8888, 9000]
+    for port in common_ports:
+        if port != preferred_port and is_port_available(host, port):
+            logging.info(f"Using alternative port: {port}")
+            return port
+    
+    # Search in the specified range
+    start, end = port_range
+    for port in range(start, end + 1):
+        if port not in common_ports and is_port_available(host, port):
+            logging.info(f"Using available port: {port}")
+            return port
+    
+    # If no port found, return None
+    return None
+
+
+def parse_arguments():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description='Bracketeer - Combat Robotics Tournament Management',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python -m bracketeer                    # Run on default port 80
+  python -m bracketeer --port 8080       # Run on specific port
+  python -m bracketeer --host 0.0.0.0    # Bind to all interfaces
+  python -m bracketeer --dev             # Development mode (auto-find port)
+  python -m bracketeer --debug           # Enable debug mode
+        """
+    )
+    
+    parser.add_argument(
+        '--port', '-p',
+        type=int,
+        default=80,
+        help='Port to run the server on (default: 80)'
+    )
+    
+    parser.add_argument(
+        '--host',
+        default='0.0.0.0',
+        help='Host to bind the server to (default: 0.0.0.0)'
+    )
+    
+    parser.add_argument(
+        '--dev',
+        action='store_true',
+        help='Development mode: automatically find available port if default is in use'
+    )
+    
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Enable debug mode (default: True, use --no-debug to disable)'
+    )
+    
+    parser.add_argument(
+        '--no-debug',
+        action='store_true',
+        help='Disable debug mode'
+    )
+    
+    return parser.parse_args()
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
@@ -180,7 +268,66 @@ def internal_error(error):
     )
 
 
-logging.basicConfig()
-logging.getLogger().setLevel(logging.INFO)
+def main():
+    """Main entry point for the application"""
+    args = parse_arguments()
+    
+    # Determine debug mode
+    debug_mode = True  # Default to True
+    if args.no_debug:
+        debug_mode = False
+    elif args.debug:
+        debug_mode = True
+    
+    # Configure logging level based on debug mode
+    log_level = logging.DEBUG if debug_mode else logging.INFO
+    logging.basicConfig(level=log_level)
+    logging.getLogger().setLevel(log_level)
+    
+    # Determine port to use
+    host = args.host
+    preferred_port = args.port
+    
+    if args.dev:
+        # Development mode: automatically find available port
+        port = find_available_port(host, preferred_port)
+        if port is None:
+            logging.error("No available ports found in the specified range!")
+            sys.exit(1)
+    else:
+        # Production mode: use specified port, fail if not available
+        if not is_port_available(host, preferred_port):
+            logging.error(f"Port {preferred_port} is not available!")
+            logging.info("Use --dev flag to automatically find an available port, or specify a different port with --port")
+            sys.exit(1)
+        port = preferred_port
+    
+    # Log startup information
+    logging.info(f"Starting Bracketeer on {host}:{port}")
+    if debug_mode:
+        logging.info("Debug mode enabled")
+    if args.dev:
+        logging.info("Development mode enabled (automatic port detection)")
+    
+    # Start the server
+    try:
+        socketio.run(
+            app, 
+            host=host, 
+            port=port, 
+            debug=debug_mode, 
+            allow_unsafe_werkzeug=True
+        )
+    except KeyboardInterrupt:
+        logging.info("Server stopped by user")
+    except Exception as e:
+        logging.error(f"Server error: {e}")
+        sys.exit(1)
 
-socketio.run(app, host="0.0.0.0", port=80, debug=True, allow_unsafe_werkzeug=True)
+
+if __name__ == "__main__":
+    main()
+else:
+    # When imported as a module, set up basic configuration
+    logging.basicConfig()
+    logging.getLogger().setLevel(logging.INFO)

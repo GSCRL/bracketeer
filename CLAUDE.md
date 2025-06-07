@@ -6,7 +6,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Run the application:**
 ```bash
+# Default mode (port 80, fails if port in use)
 uv run bracketeer/__main__.py
+
+# Development mode (auto-find available port)
+uv run bracketeer/__main__.py --dev
+
+# Specify custom port
+uv run bracketeer/__main__.py --port 8080
+
+# Custom host and port
+uv run bracketeer/__main__.py --host 127.0.0.1 --port 5000
+
+# Disable debug mode
+uv run bracketeer/__main__.py --no-debug
 ```
 
 **Install dependencies (development):**
