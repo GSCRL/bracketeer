@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block bodysections %}
+
+{% if not show_header %}
+<section class="hero is-primary">
+  <div class="hero-body">
+    <p class="title">
+      Tournament Archive
+    </p>
+    <p class="subtitle">
+      {{ event_config.name }} | Historical tournament records
+    </p>
+  </div>
+  
+  <div class="hero-foot">
+    <div class="container">
+      <div class="field is-grouped is-grouped-centered">
+        <div class="control">
+          <a href="/matches/tournament-archive" class="button is-light">
+            <span class="icon"><i class="fas fa-sync-alt"></i></span>
+            <span>Refresh</span>
+          </a>
+        </div>
+        <div class="control">
+          <a href="/matches/upcoming" class="button is-info">
+            <span class="icon"><i class="fas fa-clock"></i></span>
+            <span>Upcoming Matches</span>
+          </a>
+        </div>
+        <div class="control">
+          <a href="/matches/fight-log" class="button is-success">
+            <span class="icon"><i class="fas fa-history"></i></span>
+            <span>Fight Log</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Historical Tournaments Section -->
+{% if historical_tournaments %}
+<section class="section">
+  <div class="container">
+    <h2 class="title is-4">
+      <span class="icon has-text-success">
+        <i class="fas fa-archive"></i>
+      </span>
+      Historical Tournaments
+    </h2>
+    <p class="subtitle is-6">Past tournaments ready for video production (most recent first)</p>
+    
+    <div class="box">
+      <div class="table-container">
+        <table class="table is-hoverable is-fullwidth">
+          <thead>
+            <tr>
+              <th>Tournament</th>
+              <th>Status</th>
+              <th>Completed Matches</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tournament in historical_tournaments %}
+            <tr>
+              <td>
+                <div>
+                  <strong>{{ tournament.name }}</strong>
+                  <br><span class="tag is-light">{{ tournament.weight_class }}</span>
+                  {% if tournament.event_date %}
+                  <br><small class="has-text-grey">{{ tournament.event_date[:10] if tournament.event_date else 'Date unknown' }}</small>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                {% if tournament.completion_percentage == 100 %}
+                  <span class="tag is-success">
+                    <span class="icon"><i class="fas fa-check-circle"></i></span>
+                    <span>Complete</span>
+                  </span>
+                {% elif tournament.completion_percentage >= 75 %}
+                  <span class="tag is-warning">
+                    <span class="icon"><i class="fas fa-clock"></i></span>
+                    <span>Nearly Complete</span>
+                  </span>
+                {% else %}
+                  <span class="tag is-info">
+                    <span class="icon"><i class="fas fa-history"></i></span>
+                    <span>Archived</span>
+                  </span>
+                {% endif %}
+                <br><small class="has-text-grey">{{ "%.0f"|format(tournament.completion_percentage) }}% done</small>
+              </td>
+              <td>
+                <div class="has-text-centered">
+                  <span class="title is-4 has-text-success">{{ tournament.completed_count }}</span>
+                  <br><small class="has-text-grey">of {{ tournament.total_matches }} matches</small>
+                  {% if tournament.total_duration %}
+                  <br><span class="tag is-info is-small">{{ tournament.total_duration | round(0) }} min</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                <div class="buttons">
+                  <a href="/matches/tournament-summary/{{ tournament.id }}" class="button is-info">
+                    <span class="icon"><i class="fas fa-chart-line"></i></span>
+                    <span>View Details</span>
+                  </a>
+                </div>
+                <div class="buttons is-small">
+                  <a href="/matches/tournament-vtt/{{ tournament.id }}" class="button is-small is-primary">
+                    <span class="icon"><i class="fas fa-download"></i></span>
+                    <span>VTT</span>
+                  </a>
+                  <a href="/matches/tournament-youtube-chapters/{{ tournament.id }}" class="button is-small is-danger">
+                    <span class="icon"><i class="fab fa-youtube"></i></span>
+                    <span>YouTube</span>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+{% else %}
+<section class="section">
+  <div class="container">
+    <div class="notification is-info">
+      <span class="icon">
+        <i class="fas fa-info-circle"></i>
+      </span>
+      <strong>No historical tournaments found.</strong> Tournaments with completed matches will appear here.
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Current Tournaments Section -->
+{% if current_tournaments %}
+<section class="section">
+  <div class="container">
+    <h2 class="title is-4">
+      <span class="icon has-text-warning">
+        <i class="fas fa-clock"></i>
+      </span>
+      Current Tournaments
+    </h2>
+    <p class="subtitle is-6">Tournaments currently in progress</p>
+    
+    <div class="box">
+      <div class="table-container">
+        <table class="table is-hoverable is-fullwidth">
+          <thead>
+            <tr>
+              <th>Tournament</th>
+              <th>Weight Class</th>
+              <th>Progress</th>
+              <th>Remaining</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tournament in current_tournaments %}
+            <tr>
+              <td>
+                <div>
+                  <strong>{{ tournament.name }}</strong>
+                  <br><small class="has-text-grey">{{ tournament.weight_class }}</small>
+                </div>
+              </td>
+              <td>
+                <span class="tag is-light">{{ tournament.weight_class }}</span>
+              </td>
+              <td>
+                <div class="field">
+                  <progress class="progress is-warning is-small" value="{{ tournament.completion_percentage }}" max="100">
+                    {{ "%.0f"|format(tournament.completion_percentage) }}%
+                  </progress>
+                  <span class="tag is-warning">{{ "%.0f"|format(tournament.completion_percentage) }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="tag is-info">
+                  {{ tournament.total_matches - tournament.completed_matches }} matches
+                </span>
+              </td>
+              <td>
+                <div class="field is-grouped">
+                  <div class="control">
+                    <a href="/matches/upcoming?tournament={{ tournament.id }}" class="button is-small is-info">
+                      <span class="icon"><i class="fas fa-clock"></i></span>
+                      <span>Queue</span>
+                    </a>
+                  </div>
+                  <div class="control">
+                    <a href="/matches/fight-log?tournament={{ tournament.id }}" class="button is-small is-success">
+                      <span class="icon"><i class="fas fa-history"></i></span>
+                      <span>Fight Log</span>
+                    </a>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Empty State -->
+{% if not historical_tournaments and not current_tournaments %}
+<section class="section">
+  <div class="container">
+    <div class="notification is-info">
+      <div class="media">
+        <div class="media-left">
+          <span class="icon is-large has-text-info">
+            <i class="fas fa-archive fa-2x"></i>
+          </span>
+        </div>
+        <div class="media-content">
+          <h3 class="title is-5">No Tournament History Available</h3>
+          <p class="subtitle is-6">Tournament records will appear here as events are completed.</p>
+          <p>To populate the archive:</p>
+          <ul>
+            <li>Configure tournaments in the <a href="/setup">Setup Wizard</a></li>
+            <li>Complete tournament matches (tournaments with 95%+ completion appear in Historical)</li>
+            <li>In-progress tournaments will show in Current section</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Summary Statistics -->
+{% if historical_tournaments or current_tournaments %}
+<section class="section">
+  <div class="container">
+    <div class="notification is-light">
+      <div class="level">
+        <div class="level-item has-text-centered">
+          <div>
+            <p class="heading">Historical Tournaments</p>
+            <p class="title is-4">{{ historical_tournaments|length }}</p>
+          </div>
+        </div>
+        <div class="level-item has-text-centered">
+          <div>
+            <p class="heading">Current Tournaments</p>
+            <p class="title is-4">{{ current_tournaments|length }}</p>
+          </div>
+        </div>
+        <div class="level-item has-text-centered">
+          <div>
+            <p class="heading">Total Matches Archived</p>
+            <p class="title is-4">
+              {% set total_matches = 0 %}
+              {% for tournament in historical_tournaments %}
+                {% set total_matches = total_matches + tournament.completed_count %}
+              {% endfor %}
+              {{ total_matches }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

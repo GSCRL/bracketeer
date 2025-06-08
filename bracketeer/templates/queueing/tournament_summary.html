@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block bodysections %}
+
+{% if not show_header %}
+<section class="hero is-info">
+  <div class="hero-body">
+    <p class="title">
+      Tournament Summary
+    </p>
+    <p class="subtitle">
+      {{ tournament_name }} | Match details and video production tools
+    </p>
+  </div>
+  
+  <div class="hero-foot">
+    <div class="container">
+      <div class="field is-grouped is-grouped-centered">
+        <div class="control">
+          <a href="/matches/tournament-archive" class="button is-light">
+            <span class="icon"><i class="fas fa-arrow-left"></i></span>
+            <span>Back to Archive</span>
+          </a>
+        </div>
+        <div class="control">
+          <a href="/matches/tournament-vtt/{{ tournament_id }}" class="button is-primary">
+            <span class="icon"><i class="fas fa-download"></i></span>
+            <span>Download VTT</span>
+          </a>
+        </div>
+        <div class="control">
+          <a href="/matches/tournament-youtube-chapters/{{ tournament_id }}" class="button is-danger">
+            <span class="icon"><i class="fab fa-youtube"></i></span>
+            <span>YouTube Chapters</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Tournament Overview -->
+<section class="section">
+  <div class="container">
+    <div class="columns">
+      <!-- Tournament Statistics -->
+      <div class="column is-4">
+        <div class="box">
+          <h3 class="title is-5">
+            <span class="icon has-text-info">
+              <i class="fas fa-chart-pie"></i>
+            </span>
+            Tournament Statistics
+          </h3>
+          
+          <table class="table is-narrow is-fullwidth">
+            <tbody>
+              <tr>
+                <td><strong>Tournament:</strong></td>
+                <td>{{ tournament_name }}</td>
+              </tr>
+              <tr>
+                <td><strong>Event:</strong></td>
+                <td>{{ event_config.name }}</td>
+              </tr>
+              <tr>
+                <td><strong>League:</strong></td>
+                <td>{{ event_config.league }}</td>
+              </tr>
+              <tr>
+                <td><strong>Date:</strong></td>
+                <td>{{ event_config.date }}</td>
+              </tr>
+              <tr>
+                <td><strong>Total Matches:</strong></td>
+                <td>
+                  <span class="tag is-info">{{ total_matches }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Completed:</strong></td>
+                <td>
+                  <span class="tag is-success">{{ completed_count }}</span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Progress:</strong></td>
+                <td>
+                  <span class="tag is-primary">
+                    {{ "%.1f"|format((completed_count / total_matches * 100) if total_matches > 0 else 0) }}%
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <progress class="progress is-primary" value="{{ completed_count }}" max="{{ total_matches }}">
+            {{ "%.1f"|format((completed_count / total_matches * 100) if total_matches > 0 else 0) }}%
+          </progress>
+        </div>
+      </div>
+      
+      <!-- Video Production Tools -->
+      <div class="column is-8">
+        <div class="box">
+          <h3 class="title is-5">
+            <span class="icon has-text-danger">
+              <i class="fas fa-video"></i>
+            </span>
+            Video Production Tools
+          </h3>
+          
+          <div class="columns">
+            <div class="column">
+              <div class="card">
+                <div class="card-content has-text-centered">
+                  <span class="icon is-large has-text-primary">
+                    <i class="fas fa-closed-captioning fa-2x"></i>
+                  </span>
+                  <h4 class="title is-6">VTT Subtitles</h4>
+                  <p class="subtitle is-7">Generate WebVTT subtitle file with match timings and results</p>
+                  <a href="/matches/tournament-vtt/{{ tournament_id }}" class="button is-primary is-fullwidth">
+                    <span class="icon"><i class="fas fa-download"></i></span>
+                    <span>Download VTT File</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <div class="column">
+              <div class="card">
+                <div class="card-content has-text-centered">
+                  <span class="icon is-large has-text-danger">
+                    <i class="fab fa-youtube fa-2x"></i>
+                  </span>
+                  <h4 class="title is-6">YouTube Chapters</h4>
+                  <p class="subtitle is-7">Generate chapter markers for YouTube video descriptions</p>
+                  <a href="/matches/tournament-youtube-chapters/{{ tournament_id }}" class="button is-danger is-fullwidth">
+                    <span class="icon"><i class="fab fa-youtube"></i></span>
+                    <span>Download Chapters</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="notification is-info is-light">
+            <span class="icon">
+              <i class="fas fa-info-circle"></i>
+            </span>
+            <strong>Video Production Notes:</strong>
+            <ul>
+              <li><strong>VTT Files:</strong> Can be used as subtitle tracks in video editors or streaming platforms</li>
+              <li><strong>YouTube Chapters:</strong> Copy the text file contents into your YouTube video description</li>
+              <li><strong>Timing:</strong> Based on standard {{ event_config.match_duration }}s matches with 60s breaks</li>
+              <li><strong>Format:</strong> Matches are listed chronologically as they occurred in the tournament</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Match Timeline -->
+{% if tournament_matches %}
+<section class="section">
+  <div class="container">
+    <h2 class="title is-4">
+      <span class="icon has-text-success">
+        <i class="fas fa-history"></i>
+      </span>
+      Match Timeline
+    </h2>
+    <p class="subtitle is-6">Chronological order of completed matches</p>
+    
+    <div class="box">
+      <div class="table-container">
+        <table class="table is-hoverable is-fullwidth">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Match</th>
+              <th>Competitors</th>
+              <th>Result</th>
+              <th>Video Timing</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for match in tournament_matches %}
+            <tr>
+              <td>
+                <span class="tag is-light">{{ loop.index }}</span>
+              </td>
+              <td>
+                <strong>Match {{ loop.index }}</strong>
+                {% if match.bracketLabel %}
+                <br><small class="has-text-grey">{{ match.bracketLabel }}</small>
+                {% endif %}
+              </td>
+              <td>
+                {% if match.players and match.players|length >= 2 %}
+                  <div class="field is-grouped">
+                    <div class="control">
+                      <span class="tag is-danger is-light">{{ match.players[0].name }}</span>
+                    </div>
+                    <div class="control">
+                      <span class="has-text-grey">vs</span>
+                    </div>
+                    <div class="control">
+                      <span class="tag is-info is-light">{{ match.players[1].name }}</span>
+                    </div>
+                  </div>
+                {% else %}
+                  <span class="has-text-grey">Competitors unknown</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if match.result and match.result.winner %}
+                  <span class="tag is-success">
+                    <span class="icon"><i class="fas fa-trophy"></i></span>
+                    <span>{{ match.result.winner.name }}</span>
+                  </span>
+                {% else %}
+                  <span class="tag is-light">No result</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="field is-grouped">
+                  <div class="control">
+                    <span class="tag is-primary">
+                      {{ (loop.index0 * (150 + 60)) | format_video_timestamp }}
+                    </span>
+                  </div>
+                  <div class="control">
+                    <span class="has-text-grey">-</span>
+                  </div>
+                  <div class="control">
+                    <span class="tag is-primary">
+                      {{ ((loop.index0 * (150 + 60)) + 150) | format_video_timestamp }}
+                    </span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="notification is-success is-light">
+      <span class="icon">
+        <i class="fas fa-clock"></i>
+      </span>
+      <strong>Total Tournament Duration:</strong> 
+      Approximately {{ ((tournament_matches|length * (150 + 60)) - 60) | format_video_timestamp }} 
+      ({{ tournament_matches|length }} matches × 2.5min + breaks)
+    </div>
+  </div>
+</section>
+{% else %}
+<section class="section">
+  <div class="container">
+    <div class="notification is-warning">
+      <span class="icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </span>
+      <strong>No completed matches found.</strong> This tournament may still be in progress or have no match data available.
+    </div>
+  </div>
+</section>
+{% endif %}
+
+
+{% endblock %}

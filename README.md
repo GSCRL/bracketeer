@@ -42,17 +42,64 @@ This tool requires Python 3.9+ and `uv` for dependency management.
    python -m bracketeer --dev
    ```
 
-### Production Deployment
+### Development Server Management
 
-For tournament/event use:
+**Starting Development Server:**
 ```bash
-./scripts/start-production.sh
+# Automated start with auto-reload
+./scripts/start-development.sh
+
+# Manual start with custom options
+python -m bracketeer --dev --port 8080 --debug
+python -m bracketeer --dev --host 127.0.0.1 --port 5000
 ```
 
-Or manually:
+**Stopping Development Server:**
 ```bash
+# Keyboard interrupt (development servers run in foreground)
+Ctrl+C
+```
+
+**Development vs Production:**
+- **Development**: Auto-reload, debug mode, detailed error pages, port auto-detection
+- **Production**: Optimized performance, production logging, manual port configuration
+
+### Production Deployment
+
+**Starting Production Server:**
+```bash
+# Automated start with script
+./scripts/start-production.sh
+
+# Manual start
 export BRACKETEER_ENV=production
 python -m bracketeer --host 0.0.0.0 --port 80 --no-debug
+```
+
+**Stopping Production Server:**
+```bash
+# Method 1: Keyboard interrupt (if running in foreground)
+Ctrl+C
+
+# Method 2: Find and kill process (if running in background)
+ps aux | grep bracketeer
+kill <process_id>
+
+# Method 3: Kill by port (if needed)
+sudo lsof -ti:80 | xargs kill -9
+```
+
+**Background Operation:**
+```bash
+# Run in background (detached from terminal)
+nohup ./scripts/start-production.sh > logs/production.log 2>&1 &
+
+# View logs
+tail -f logs/production.log
+
+# Stop background process
+ps aux | grep bracketeer
+kill <process_id>
 ```
 
 ## Networking Setup
@@ -108,6 +155,70 @@ You can test the entire Bracketeer system on a single laptop by opening multiple
 - **SocketIO Coordination**: All displays update simultaneously in real-time
 
 All displays update in real-time via SocketIO, making single-computer testing effective for development and demonstration.
+
+## Server Management & Troubleshooting
+
+### Common Issues
+
+**Port Already in Use:**
+```bash
+# Check what's using port 80
+sudo lsof -i :80
+
+# Kill process using port 80
+sudo lsof -ti:80 | xargs kill -9
+
+# Or use a different port
+python -m bracketeer --port 8080 --host 0.0.0.0 --no-debug
+```
+
+**Permission Denied (Port 80):**
+```bash
+# Option 1: Run with sudo (not recommended for development)
+sudo python -m bracketeer --host 0.0.0.0 --port 80 --no-debug
+
+# Option 2: Use a higher port (recommended)
+python -m bracketeer --host 0.0.0.0 --port 8080 --no-debug
+```
+
+**Server Won't Stop:**
+```bash
+# Find all Bracketeer processes
+ps aux | grep bracketeer | grep -v grep
+
+# Kill all Bracketeer processes
+pkill -f "python.*bracketeer"
+
+# Nuclear option: kill all Python processes using port 80
+sudo lsof -ti:80 | xargs kill -9
+```
+
+**Check if Server is Running:**
+```bash
+# Test if server responds
+curl http://localhost:80
+curl http://192.168.8.250:80
+
+# Check process list
+ps aux | grep bracketeer
+```
+
+### Production Server Status
+
+**View Server Logs:**
+```bash
+# If running with nohup
+tail -f logs/production.log
+
+# If running with systemd (advanced)
+journalctl -u bracketeer -f
+```
+
+**Monitor Server Health:**
+```bash
+# Check if server is responding
+while true; do curl -s http://localhost:80 > /dev/null && echo "$(date): Server OK" || echo "$(date): Server DOWN"; sleep 10; done
+```
 
 ## Additional Tools
 
