@@ -100,46 +100,99 @@ def filtering_func(x):
 
 
 def _json_api_stub():
-    """Lightweight version - use fallback data instead of heavy API calls"""
+    """Get actual match data from API - FIXED VERSION"""
+    from bracketeer.api_truefinals.cached_wrapper import getAllTournamentsMatchesWithPlayers
     from bracketeer.config import settings
     import logging
     
-    # Return empty matches with basic structure for now
-    # This prevents the app from hanging while we fix the underlying API issues
-    matches = []
-    tournament_names = {}
+    logging.info("Getting live match data for upcoming matches")
     
     try:
-        logging.info("Using lightweight _json_api_stub - returning empty matches for stability")
+        # Get all matches with player data using the existing filtering function
+        all_matches = getAllTournamentsMatchesWithPlayers(filterFunction=filtering_func)
+        logging.info(f"Retrieved {len(all_matches)} matches from API")
         
-        # Get basic tournament names from config (no API calls)
+        # Get tournament names for display
+        tournament_names = {}
         tournament_keys = settings.get('tournament_keys', [])
         for tournament in tournament_keys:
             tournament_names[tournament['id']] = tournament.get('weightclass', f'Tournament {tournament["id"][:8]}')
-            
+        
+        # Add tournament display names to matches
+        for match in all_matches:
+            tournament_id = match.get('tournamentID')
+            if tournament_id in tournament_names:
+                match['tournament_display_name'] = tournament_names[tournament_id]
+            else:
+                match['tournament_display_name'] = f'Tournament {tournament_id[:8] if tournament_id else "Unknown"}'
+        
+        # Organize matches by status
+        organized_matches = {
+            'active': [],      # Currently fighting
+            'on_deck': [],     # Called to arena, ready to fight  
+            'upcoming': []     # Available but not yet called
+        }
+        
+        for match in all_matches:
+            state = match.get('state', 'unknown')
+            if state == 'active':
+                organized_matches['active'].append(match)
+            elif state in ['called', 'ready']:
+                organized_matches['on_deck'].append(match)
+            elif state == 'available':
+                organized_matches['upcoming'].append(match)
+        
+        # Sort matches within each category
+        # Active: most recently started first
+        organized_matches['active'].sort(
+            key=lambda x: x.get('calledSince', 0), 
+            reverse=True
+        )
+        
+        # On deck: earliest called first (ready to go)
+        organized_matches['on_deck'].sort(
+            key=lambda x: x.get('calledSince', 0), 
+            reverse=False
+        )
+        
+        # Upcoming: by match order/name
+        organized_matches['upcoming'].sort(
+            key=lambda x: x.get('name', '')
+        )
+        
+        # Create result object with the expected structure
+        result = type('MatchData', (), {
+            '_matches': all_matches,
+            'organized': organized_matches,
+            'active_count': len(organized_matches['active']),
+            'on_deck_count': len(organized_matches['on_deck']),
+            'upcoming_count': len(organized_matches['upcoming'])
+        })()
+        
+        logging.info(f"Match organization complete: {result.active_count} active, {result.on_deck_count} on deck, {result.upcoming_count} upcoming")
+        
+        return result
+        
     except Exception as e:
-        logging.warning(f"_json_api_stub fallback failed: {e}")
-        matches = []
-        tournament_names = {}
-    
-    # Organize matches by status (empty for now)
-    organized_matches = {
-        'active': [],      # Currently fighting
-        'on_deck': [],     # Called to arena, ready to fight
-        'upcoming': []     # Available but not yet called
-    }
-    
-    # Return empty data structure that matches expected format
-    result = type('MatchData', (), {
-        '_matches': matches,
-        'organized': organized_matches,
-        'active_count': 0,
-        'on_deck_count': 0,
-        'upcoming_count': 0
-    })()
-    
-    return result
-
+        logging.error(f"Error getting match data: {e}")
+        
+        # Fallback to empty structure if API fails
+        organized_matches = {
+            'active': [],
+            'on_deck': [],
+            'upcoming': []
+        }
+        
+        result = type('MatchData', (), {
+            '_matches': [],
+            'organized': organized_matches,
+            'active_count': 0,
+            'on_deck_count': 0,
+            'upcoming_count': 0,
+            'error': str(e)
+        })()
+        
+        return result
 
 @match_results.route("/upcoming.json")
 def _json_api_results():

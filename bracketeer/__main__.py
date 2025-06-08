@@ -113,7 +113,13 @@ app.register_blueprint(debug_pages, url_prefix="/debug")
 app.register_blueprint(setup_wizard, url_prefix="/setup")
 
 app.config["SECRET_KEY"] = "secret secret key (required)!"
-socketio = SocketIO(app)
+socketio = SocketIO(
+    app,
+    cors_allowed_origins="*",    # This should fix 403 errors
+    async_mode='threading',      # Explicit transport mode
+    logger=True,                 # See what's happening
+    engineio_logger=True
+)
 
 # Initialize SocketIO handlers
 from bracketeer.util.wrappers import SocketIOHandlerConstruction

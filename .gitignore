@@ -160,3 +160,6 @@ src/tf_lru.sqlite
 uv.lock
 bracketeer_clients.sqlite
 tf_lru.sqlite
+
+**/.DS_Store
+
