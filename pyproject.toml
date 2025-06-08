@@ -33,5 +33,8 @@ dev = [
 [tool.uv]
 package = true
 
+[tool.setuptools.packages.find]
+include = ["bracketeer*"]
+
 [tool.ruff.lint]
 select = ["F401", "I", "PERF", "YTT", "ANN"]
