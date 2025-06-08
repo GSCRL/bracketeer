@@ -34,10 +34,13 @@ def create_app():
     Application factory that returns the SocketIO WSGI application.
     This ensures proper initialization for production deployment.
     """
+    # Return the SocketIO app, which wraps the Flask app
     return socketio
 
 # The WSGI application that Gunicorn will use
-application = create_app()
+# For Flask-SocketIO with Gunicorn, use the Flask app directly
+# The SocketIO instance patches the Flask app to handle WebSocket requests
+application = app
 
 if __name__ == "__main__":
     # This allows running the WSGI app directly for testing

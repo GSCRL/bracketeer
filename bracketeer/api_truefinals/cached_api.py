@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 # Text type is VarChar without limit, probably fine?
@@ -11,7 +12,15 @@ from piccolo.table import Table
 
 from bracketeer.api_truefinals.api import makeAPIRequest
 
-lru_DB = SQLiteEngine(path="tf_lru.sqlite")
+# Lazy initialization to avoid asyncio conflicts with Gunicorn
+_lru_DB = None
+
+def get_db_engine():
+    """Get database engine with lazy initialization to avoid asyncio conflicts."""
+    global _lru_DB
+    if _lru_DB is None:
+        _lru_DB = SQLiteEngine(path="tf_lru.sqlite")
+    return _lru_DB
 
 """
 The true ratelimit of TrueFinals is 10 requests in 10 seconds, 
@@ -37,19 +46,24 @@ rather than keeping them in perpetuity.
 
 
 def are_rate_limited() -> bool:
-    requests_thing = (
-        TrueFinalsAPICache.select()
-        .where((time() - 10) > TrueFinalsAPICache.last_requested)
-        .run_sync()
-    )
-    if (
-        len(requests_thing) >= 5
-    ):  # half of calls can be API due to web panel causing headaches.
-        return True
-    return False
+    _ensure_tables_exist()
+    try:
+        requests_thing = _safe_run_sync(
+            TrueFinalsAPICache.select()
+            .where((time() - 10) > TrueFinalsAPICache.last_requested)
+            .run()
+        )
+        if (
+            len(requests_thing) >= 5
+        ):  # half of calls can be API due to web panel causing headaches.
+            return True
+        return False
+    except Exception as e:
+        logging.warning(f"Rate limit check failed: {e}")
+        return False  # Assume not rate limited if check fails
 
 
-class TrueFinalsAPICache(Table, db=lru_DB):
+class TrueFinalsAPICache(Table):
     id = UUID(primary_key=True)
     response = JSON()
     last_requested = BigInt()
@@ -60,7 +74,7 @@ class TrueFinalsAPICache(Table, db=lru_DB):
 
 
 # This is only used as a persistent cache in the same datastore to avoid headaches.
-class TrueFinalsTournamentsPlayers(Table, db=lru_DB):
+class TrueFinalsTournamentsPlayers(Table):
     pk_id = UUID(primary_key=True)
     tournament_id = Text()
     id = Text()
@@ -68,9 +82,37 @@ class TrueFinalsTournamentsPlayers(Table, db=lru_DB):
     player_data = JSON()
 
 
-# Need to assert that the table exists first, or else it fails horridly.
-TrueFinalsAPICache.create_table(if_not_exists=True).run_sync()
-TrueFinalsTournamentsPlayers.create_table(if_not_exists=True).run_sync()
+def _ensure_tables_exist():
+    """Ensure database tables exist, with proper asyncio handling."""
+    # Set the database engine for tables
+    TrueFinalsAPICache._meta.db = get_db_engine()
+    TrueFinalsTournamentsPlayers._meta.db = get_db_engine()
+    
+    # Use thread pool executor to avoid asyncio conflicts
+    import concurrent.futures
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future1 = executor.submit(lambda: TrueFinalsAPICache.create_table(if_not_exists=True).run_sync())
+        future2 = executor.submit(lambda: TrueFinalsTournamentsPlayers.create_table(if_not_exists=True).run_sync())
+        try:
+            future1.result(timeout=10)
+            future2.result(timeout=10)
+        except Exception as e:
+            logging.warning(f"Database table creation failed: {e}")
+
+
+def _safe_run_sync(coroutine):
+    """Safely run async code with proper event loop handling."""
+    try:
+        # Check if there's already a running event loop
+        loop = asyncio.get_running_loop()
+        # If we're in an event loop, use thread pool
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(asyncio.run, coroutine)
+            return future.result(timeout=30)
+    except RuntimeError:
+        # No running event loop, safe to use asyncio.run
+        return asyncio.run(coroutine)
 
 
 def _generate_cache_query(api_endpoint, expiry=60, expired_is_ok=False):
@@ -100,8 +142,11 @@ def _generate_cache_query(api_endpoint, expiry=60, expired_is_ok=False):
 
 def getAPIEndpointRespectfully(api_endpoint: str, expiry=60):
     logging.info(f"expiry is {expiry} while calling {api_endpoint}")
+    
+    # Ensure tables exist before any operations
+    _ensure_tables_exist()
 
-    find_response = _generate_cache_query(api_endpoint, expiry).run_sync()
+    find_response = _safe_run_sync(_generate_cache_query(api_endpoint, expiry).run())
 
     # Key is not present.
     if len(find_response) == 0:
@@ -111,7 +156,7 @@ def getAPIEndpointRespectfully(api_endpoint: str, expiry=60):
 
         query_remote = makeAPIRequest(api_endpoint)
         # print(query_remote.headers)
-        insert_query = TrueFinalsAPICache.insert(
+        insert_query = _safe_run_sync(TrueFinalsAPICache.insert(
             TrueFinalsAPICache(
                 response=query_remote.json(),
                 successful=(
@@ -123,27 +168,27 @@ def getAPIEndpointRespectfully(api_endpoint: str, expiry=60):
                 resp_code=query_remote.status_code,
                 resp_headers=query_remote.headers,
             ),
-        ).run_sync()
+        ).run())
 
-        TrueFinalsAPICache.update(force=True)
+        # Force update not needed with proper async handling
     else:
         logging.info(f"Valid keys found, not requesting {api_endpoint}.")
 
-    find_response = _generate_cache_query(
+    find_response = _safe_run_sync(_generate_cache_query(
         api_endpoint=api_endpoint,
         expiry=expiry,
-    ).run_sync()
+    ).run())
 
     # last ditch effort of "if we didn't get good data the last
     # invocation, we try to return known stale data we have a
     # copy of."
 
     if len(find_response) == 0:
-        _generate_cache_query(
+        find_response = _safe_run_sync(_generate_cache_query(
             api_endpoint=api_endpoint,
             expiry=expiry,
             expired_is_ok=True,
-        ).run_sync()
+        ).run())
 
     return find_response
 
@@ -395,12 +440,13 @@ def getTournamentLocations(tournamentID: str) -> list[dict]:
 
 # DO NOT USE LIGHTLY.  THIS EMPTIES THE FILE.
 def purge_API_Cache(timer_passed=3600):
+    _ensure_tables_exist()
     # We only care about the last 10 minutes of event match failures I suspect.
-    TrueFinalsAPICache.delete().where(
+    _safe_run_sync(TrueFinalsAPICache.delete().where(
         TrueFinalsAPICache.last_requested + 600 < time(),
-    ).where(TrueFinalsAPICache.successful == False).run_sync()
+    ).where(TrueFinalsAPICache.successful == False).run())
 
     # Anything past the last hour we get rid of.
-    TrueFinalsAPICache.delete().where(
+    _safe_run_sync(TrueFinalsAPICache.delete().where(
         (TrueFinalsAPICache.last_requested + timer_passed < time()),
-    ).run_sync()
+    ).run())

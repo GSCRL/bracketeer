@@ -8,8 +8,10 @@ secrets = Dynaconf(envvar_prefix="DYNACONF", settings_files=[Path(".secrets.json
 
 def runtime_err_warn(func):
     """Decorator that reports the execution time."""
+    import functools
 
-    def wrap(*args, **kwargs):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
         # start = time.time()
 
         if "challonge" not in secrets:
@@ -33,4 +35,4 @@ def runtime_err_warn(func):
         # print(func.__name__, end-start)
         return result
 
-    return wrap
+    return wrapper

@@ -6,6 +6,8 @@ from bracketeer.api_truefinals.cached_api import (
     getAllGames,
     getAllPlayersInTournament,
     getEventLocations,
+    _ensure_tables_exist,
+    _safe_run_sync,
 )
 from bracketeer.config import settings as arena_settings
 
@@ -85,6 +87,7 @@ This being faster than for loops feels absurd, I agree.
 
 
 def build_player_dict_via_db_proxy():
+    _ensure_tables_exist()
     player_id_dict = {}
     start_build = time()
 
@@ -92,10 +95,10 @@ def build_player_dict_via_db_proxy():
     # data as they've expired since we got them.
     if (
         len(
-            TrueFinalsTournamentsPlayers.select()
+            _safe_run_sync(TrueFinalsTournamentsPlayers.select()
             .where(TrueFinalsTournamentsPlayers.last_updated + 3600 > time())
             .output(load_json=True)
-            .run_sync(),
+            .run()),
         )
         == 0
     ):
@@ -114,17 +117,17 @@ def build_player_dict_via_db_proxy():
         ]
 
         for i in refactor_list:
-            TrueFinalsTournamentsPlayers.insert(
+            _safe_run_sync(TrueFinalsTournamentsPlayers.insert(
                 TrueFinalsTournamentsPlayers(
                     id=i["player_data"]["id"],
                     tournament_id=i["tournament_id"],
                     last_updated=i["last_updated"],
                     player_data=i["player_data"],
                 ),
-            ).run_sync()
+            ).run())
 
     for tournament_player in (
-        TrueFinalsTournamentsPlayers.select().output(load_json=True).run_sync()
+        _safe_run_sync(TrueFinalsTournamentsPlayers.select().output(load_json=True).run())
     ):
         if tournament_player["tournament_id"] not in player_id_dict:
             player_id_dict[tournament_player["tournament_id"]] = {}
