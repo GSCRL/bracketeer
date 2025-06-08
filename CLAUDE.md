@@ -23,18 +23,26 @@ python -m bracketeer --dev
 
 *Production Mode (recommended for tournaments/events):*
 ```bash
-# Quick start - production server 
+# Quick start - production server with Gunicorn
 ./scripts/start-production.sh
 
-# Manual production server (using uv)
+# Stop production server
+./scripts/stop-production.sh
+
+# Restart production server
+./scripts/restart-production.sh
+
+# Check server status
+./scripts/status-production.sh
+
+# View logs
+./scripts/logs-production.sh          # View error log
+./scripts/logs-production.sh access   # View access log
+./scripts/logs-production.sh tail     # Follow error log
+
+# Manual production server (using uv - not recommended)
 export BRACKETEER_ENV=production
 uv run bracketeer --host 0.0.0.0 --port 80 --no-debug
-
-# Custom production configuration
-uv run bracketeer --host 0.0.0.0 --port 8080 --no-debug
-
-# Direct Python execution (requires manual dependency management)
-python -m bracketeer --host 0.0.0.0 --port 80 --no-debug
 ```
 
 *Development Server Options:*
@@ -177,19 +185,29 @@ uv run pytest
 
 ### Web Server Configuration
 
-Bracketeer uses Flask-SocketIO's built-in production server for optimal real-time performance:
+Bracketeer supports both development and production deployment modes:
 
 **Development Server:**
 - Best for: Development, testing, debugging
 - Features: Auto-reload, detailed error pages, port auto-detection
 - Performance: Single-threaded, includes development debugging
-- Usage: `./scripts/start-development.sh` or `python -m bracketeer --dev`
+- Usage: `./scripts/start-development.sh` or `uv run bracketeer --dev`
 
 **Production Server:**
 - Best for: Tournaments, events, production environments  
-- Features: Optimized for real-time SocketIO, production logging
-- Performance: Designed for concurrent users and real-time WebSocket connections
-- Usage: `./scripts/start-production.sh` or `python -m bracketeer --host 0.0.0.0 --port 80 --no-debug`
+- Features: Gunicorn WSGI server, process management, production logging, graceful shutdown
+- Performance: Optimized for concurrent users and real-time WebSocket connections
+- Process Management: PID file, daemon mode, signal handling
+- Usage: `./scripts/start-production.sh`
+
+**Production Management Commands:**
+```bash
+./scripts/start-production.sh    # Start server
+./scripts/stop-production.sh     # Graceful shutdown
+./scripts/restart-production.sh  # Stop and start
+./scripts/status-production.sh   # Check server status
+./scripts/logs-production.sh     # View logs
+```
 
 ### Environment Configuration
 

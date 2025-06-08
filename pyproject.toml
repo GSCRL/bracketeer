@@ -10,6 +10,8 @@ dependencies = [
     "flask-caching>=2.3.1",
     "flask-socketio>=5.3.6",
     "flask[async]>=3.1.0",
+    "gevent>=24.2.1",
+    "gunicorn>=23.0.0",
     "httpx>=0.25.1",
     "piccolo[sqlite]>=1.22.0",
 ]
