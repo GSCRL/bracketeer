@@ -247,3 +247,61 @@ purge_API_Cache(timer_passed=0)  # Purge all
 - **NEW**: Global event-level defaults in `/settings` page and `event.json`
 - Cages initialize from event defaults but can override individually
 - "Reset to Event Defaults" button restores global settings per cage
+
+✅ **RESOLVED**: Homepage hanging on load with 403/timeout errors.
+
+**Root Cause**: The homepage route (`/`) was making blocking synchronous calls to TrueFinals API via `getTournamentDetails()` during page load. The `_safe_run_sync()` function uses a 30-second timeout when dealing with async database operations in a sync context, causing browsers to hang and return 403-like timeout errors.
+
+**Solution implemented**:
+- Removed blocking TrueFinals API calls from homepage route
+- Homepage now loads immediately with fallback tournament names (weightclass)
+- API enrichment can be moved to asynchronous background processes if needed
+- Fixed auto port detection logic that was overriding user-specified ports
+
+## Critical Developer Warning: Async/Sync Conflicts
+
+⚠️ **DANGER**: Mixing async/sync operations can cause severe performance issues
+
+**Problem Pattern**:
+```python
+# DANGEROUS - Don't do this in Flask routes
+@app.route("/")
+def homepage():
+    result = getTournamentDetails(tournament_id)  # Contains _safe_run_sync() with 30s timeout
+    return render_template("page.html", data=result)
+```
+
+**Why This Fails**:
+- Flask routes are synchronous but TrueFinals cached API uses async database operations
+- `_safe_run_sync()` creates thread pools with 30-second timeouts
+- Multiple concurrent requests create thread pool exhaustion
+- Results in hanging requests, timeouts, and apparent 403 errors
+
+**Safe Pattern**:
+```python
+# SAFE - Use fallback data, do API calls asynchronously
+@app.route("/")
+def homepage():
+    # Use cached/fallback data for immediate response
+    tournament_name = tournament.get('weightclass', f'Tournament {tournament["id"][:8]}')
+    return render_template("page.html", data=tournament_name)
+
+# Move API enrichment to background tasks or separate endpoints
+@app.route("/api/enrich-tournaments")
+def enrich_tournaments():
+    # Do expensive API operations here
+    pass
+```
+
+**Debugging Symptoms**:
+- Homepage loads for 30+ seconds then fails
+- Browser shows 403 errors (actually timeouts)
+- SocketIO connections work but HTTP routes hang
+- Curl requests timeout after 30 seconds
+- Multiple concurrent users cause server unresponsiveness
+
+**Best Practice**: 
+- Keep Flask routes lightweight and fast (<100ms response time)
+- Use background tasks for expensive API operations
+- Implement progressive enhancement (load basic page, then enrich with AJAX)
+- Monitor route response times in development
