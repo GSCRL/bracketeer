@@ -5,7 +5,7 @@
   "match_duration": 150,
   "countdown_duration": 3,
   "red_blue_positioning": {
-    "slots_swap_default": false,
+    "slots_swap_default": true,
     "physical_swap_default": false,
     "description": "Default red/blue positioning for all cages. slots_swap_default fixes TrueFinals slot assignment when backwards. physical_swap_default handles robots entering opposite corners."
   },

@@ -143,6 +143,17 @@
           </thead>
           <tbody>
             {% for match in tournament.completed_matches %}
+            <!-- Determine slot assignments based on settings -->
+            {% set slots_swap = arena_settings.red_blue_positioning.slots_swap_default if arena_settings.red_blue_positioning else false %}
+            
+            {% if slots_swap %}
+              {% set red_slot = match.slots[1] if match.slots and match.slots|length > 1 else none %}
+              {% set blue_slot = match.slots[0] if match.slots and match.slots|length > 0 else none %}
+            {% else %}
+              {% set red_slot = match.slots[0] if match.slots and match.slots|length > 0 else none %}
+              {% set blue_slot = match.slots[1] if match.slots and match.slots|length > 1 else none %}
+            {% endif %}
+            
             <tr>
               <td>
                 <strong>{{ match.name }}</strong>
@@ -150,11 +161,11 @@
                 <small class="has-text-grey">{{ match.weightclass }}</small>
               </td>
               <td>
-                {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
+                {% if red_slot and red_slot.bracketeer_player_data %}
                 <div>
-                  <p class="has-text-weight-bold">🔴 {{ match.slots[0].bracketeer_player_data.name }}</p>
+                  <p class="has-text-weight-bold">🔴 {{ red_slot.bracketeer_player_data.name }}</p>
                   <small class="has-text-grey">
-                    {{ match.slots[0].bracketeer_player_data.wins }}W-{{ match.slots[0].bracketeer_player_data.losses }}L-{{ match.slots[0].bracketeer_player_data.ties }}T
+                    {{ red_slot.bracketeer_player_data.wins }}W-{{ red_slot.bracketeer_player_data.losses }}L-{{ red_slot.bracketeer_player_data.ties }}T
                   </small>
                 </div>
                 {% else %}
@@ -162,11 +173,11 @@
                 {% endif %}
               </td>
               <td>
-                {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
+                {% if blue_slot and blue_slot.bracketeer_player_data %}
                 <div>
-                  <p class="has-text-weight-bold">🔵 {{ match.slots[1].bracketeer_player_data.name }}</p>
+                  <p class="has-text-weight-bold">🔵 {{ blue_slot.bracketeer_player_data.name }}</p>
                   <small class="has-text-grey">
-                    {{ match.slots[1].bracketeer_player_data.wins }}W-{{ match.slots[1].bracketeer_player_data.losses }}L-{{ match.slots[1].bracketeer_player_data.ties }}T
+                    {{ blue_slot.bracketeer_player_data.wins }}W-{{ blue_slot.bracketeer_player_data.losses }}L-{{ blue_slot.bracketeer_player_data.ties }}T
                   </small>
                 </div>
                 {% else %}
@@ -175,9 +186,9 @@
               </td>
               <td>
                 {% if match.winner %}
-                  {% if match.winner == match.slots[0].id %}
+                  {% if red_slot and match.winner == red_slot.id %}
                     <span class="tag is-danger">🔴 Red Wins</span>
-                  {% elif match.winner == match.slots[1].id %}
+                  {% elif blue_slot and match.winner == blue_slot.id %}
                     <span class="tag is-info">🔵 Blue Wins</span>
                   {% else %}
                     <span class="tag is-warning">{{ match.winner }}</span>
@@ -220,6 +231,17 @@
           </thead>
           <tbody>
             {% for match in tournament.in_progress_matches %}
+            <!-- Determine slot assignments based on settings -->
+            {% set slots_swap = arena_settings.red_blue_positioning.slots_swap_default if arena_settings.red_blue_positioning else false %}
+            
+            {% if slots_swap %}
+              {% set red_slot = match.slots[1] if match.slots and match.slots|length > 1 else none %}
+              {% set blue_slot = match.slots[0] if match.slots and match.slots|length > 0 else none %}
+            {% else %}
+              {% set red_slot = match.slots[0] if match.slots and match.slots|length > 0 else none %}
+              {% set blue_slot = match.slots[1] if match.slots and match.slots|length > 1 else none %}
+            {% endif %}
+            
             <tr>
               <td>
                 <strong>{{ match.name }}</strong>
@@ -227,11 +249,11 @@
                 <small class="has-text-grey">{{ match.weightclass }}</small>
               </td>
               <td>
-                {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
+                {% if red_slot and red_slot.bracketeer_player_data %}
                 <div>
-                  <p class="has-text-weight-bold">🔴 {{ match.slots[0].bracketeer_player_data.name }}</p>
+                  <p class="has-text-weight-bold">🔴 {{ red_slot.bracketeer_player_data.name }}</p>
                   <small class="has-text-grey">
-                    {{ match.slots[0].bracketeer_player_data.wins }}W-{{ match.slots[0].bracketeer_player_data.losses }}L-{{ match.slots[0].bracketeer_player_data.ties }}T
+                    {{ red_slot.bracketeer_player_data.wins }}W-{{ red_slot.bracketeer_player_data.losses }}L-{{ red_slot.bracketeer_player_data.ties }}T
                   </small>
                 </div>
                 {% else %}
@@ -239,11 +261,11 @@
                 {% endif %}
               </td>
               <td>
-                {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
+                {% if blue_slot and blue_slot.bracketeer_player_data %}
                 <div>
-                  <p class="has-text-weight-bold">🔵 {{ match.slots[1].bracketeer_player_data.name }}</p>
+                  <p class="has-text-weight-bold">🔵 {{ blue_slot.bracketeer_player_data.name }}</p>
                   <small class="has-text-grey">
-                    {{ match.slots[1].bracketeer_player_data.wins }}W-{{ match.slots[1].bracketeer_player_data.losses }}L-{{ match.slots[1].bracketeer_player_data.ties }}T
+                    {{ blue_slot.bracketeer_player_data.wins }}W-{{ blue_slot.bracketeer_player_data.losses }}L-{{ blue_slot.bracketeer_player_data.ties }}T
                   </small>
                 </div>
                 {% else %}
@@ -291,6 +313,17 @@
       
       <div class="columns is-multiline">
         {% for match in tournament.upcoming_matches[:6] %}  <!-- Show first 6 upcoming -->
+        <!-- Determine slot assignments based on settings -->
+        {% set slots_swap = arena_settings.red_blue_positioning.slots_swap_default if arena_settings.red_blue_positioning else false %}
+        
+        {% if slots_swap %}
+          {% set red_slot = match.slots[1] if match.slots and match.slots|length > 1 else none %}
+          {% set blue_slot = match.slots[0] if match.slots and match.slots|length > 0 else none %}
+        {% else %}
+          {% set red_slot = match.slots[0] if match.slots and match.slots|length > 0 else none %}
+          {% set blue_slot = match.slots[1] if match.slots and match.slots|length > 1 else none %}
+        {% endif %}
+        
         <div class="column is-half">
           <div class="notification is-info is-light">
             <div class="content">
@@ -298,17 +331,17 @@
               <p class="is-size-7 has-text-grey">{{ match.weightclass }}</p>
               <div class="columns is-mobile">
                 <div class="column">
-                  {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
-                  <p>🔴 {{ match.slots[0].bracketeer_player_data.name }}</p>
-                  <small>{{ match.slots[0].bracketeer_player_data.wins }}W-{{ match.slots[0].bracketeer_player_data.losses }}L-{{ match.slots[0].bracketeer_player_data.ties }}T</small>
+                  {% if red_slot and red_slot.bracketeer_player_data %}
+                  <p>🔴 {{ red_slot.bracketeer_player_data.name }}</p>
+                  <small>{{ red_slot.bracketeer_player_data.wins }}W-{{ red_slot.bracketeer_player_data.losses }}L-{{ red_slot.bracketeer_player_data.ties }}T</small>
                   {% else %}
                   <p>🔴 TBD</p>
                   {% endif %}
                 </div>
                 <div class="column">
-                  {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
-                  <p>🔵 {{ match.slots[1].bracketeer_player_data.name }}</p>
-                  <small>{{ match.slots[1].bracketeer_player_data.wins }}W-{{ match.slots[1].bracketeer_player_data.losses }}L-{{ match.slots[1].bracketeer_player_data.ties }}T</small>
+                  {% if blue_slot and blue_slot.bracketeer_player_data %}
+                  <p>🔵 {{ blue_slot.bracketeer_player_data.name }}</p>
+                  <small>{{ blue_slot.bracketeer_player_data.wins }}W-{{ blue_slot.bracketeer_player_data.losses }}L-{{ blue_slot.bracketeer_player_data.ties }}T</small>
                   {% else %}
                   <p>🔵 TBD</p>
                   {% endif %}

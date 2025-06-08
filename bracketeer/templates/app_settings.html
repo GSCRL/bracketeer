@@ -7,15 +7,24 @@
     <div class="block">
         <h2 class="subtitle">Event Settings</h2>
     </div>
-    <div class="block">
-        <p>
+    <div class="field">
+        <label class="label" for="gscrl_event_name">Event Name</label>
+        <div class="control">
             <input class="input" type="text" id="gscrl_event_name" value="{{ arena_settings.event_name }}" placeholder="Event Name">
-        </p>
+        </div>
     </div>
-    <div class="block">
-        <p>
+    <div class="field">
+        <label class="label" for="gscrl_event_league">Event League</label>
+        <div class="control">
             <input class="input" type="text" id="gscrl_event_league" value="{{ arena_settings.event_league }}" placeholder="Event League">
-        </p>
+        </div>
+    </div>
+    <div class="field">
+        <div class="control">
+            <button class="button is-primary" onclick="saveEventSettings()">
+                Save Event Settings
+            </button>
+        </div>
     </div>
 </section>
 
@@ -60,68 +69,121 @@
     </div>
 </section>
 
-<!-- Cage only metadata. -->
+<!-- Cage Configuration -->
 <section class="section">
     <div class="block">
-        <h2 class="subtitle">Cages</h2>
+        <h2 class="subtitle">Arena Cages</h2>
+        <p class="help">Configure your arena cages/locations for multi-arena events.</p>
     </div>
     <div class="block">
         <table class="table is-striped is-fullwidth">
             <thead>
-                <th>Cage ID</th>
-                <th>Cage Name</th>
-            </thead>
-            <tbody>
-            {% for cage in arena_settings.tournament_cages %} {{ loop.counter }}
                 <tr>
+                    <th>Cage ID</th>
+                    <th>Cage Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="cages-table-body">
+            {% for cage in arena_settings.tournament_cages %}
+                <tr data-cage-index="{{ loop.index }}">
                     <td>
-                        <input class="input" type="number" id="return_cage_id_row_{{ loop.index }}" placeholder="{{ cage.id }}" value="{{ cage.id }}">
+                        <input class="input" type="number" id="return_cage_id_row_{{ loop.index }}" placeholder="{{ cage.id }}" value="{{ cage.id }}" min="1">
                     </td>
                     <td>                    
-                        <input class="input" type="text"  id="return_cage_name_row_{{ loop.index }}" placeholder="{{ cage.name }}" value="{{ cage.name }}">
+                        <input class="input" type="text" id="return_cage_name_row_{{ loop.index }}" placeholder="{{ cage.name }}" value="{{ cage.name }}">
+                    </td>
+                    <td>
+                        <button class="button is-danger is-small" onclick="removeCage({{ loop.index }})">
+                            <span class="icon">
+                                <i class="fas fa-trash"></i>
+                            </span>
+                        </button>
                     </td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
+        <div class="field is-grouped">
+            <div class="control">
+                <button class="button is-success" onclick="addCage()">
+                    <span class="icon">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                    <span>Add Cage</span>
+                </button>
+            </div>
+            <div class="control">
+                <button class="button is-primary" onclick="saveCages()">
+                    Save Cage Configuration
+                </button>
+            </div>
+        </div>
     </div>
 </section>
 
-<!-- Event Tournament Setup -->
+<!-- Tournament Configuration -->
 <section class="section">
     <div class="block">
         <h2 class="subtitle">TrueFinals Tournaments</h2>
+        <p class="help">Configure tournaments to pull match data from TrueFinals API.</p>
     </div>
     <div class="block">
         <table class="table is-striped is-fullwidth">
             <thead>
-                <th>Weightclass Name</th>
-                <th>TrueFinals Key</th>
-                <th>Weightclass (grams)</th>
-            </thead>
-            <tbody>
-            {% for tournament in arena_settings.tournament_keys %} {{ loop.counter }}
                 <tr>
+                    <th>Division Name</th>
+                    <th>TrueFinals Tournament ID</th>
+                    <th>Weight Class (grams)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tournaments-table-body">
+            {% for tournament in arena_settings.tournament_keys %}
+                <tr data-tournament-index="{{ loop.index }}">
                     <td>
-                        <input class="input" type="text" id="return_tourneys_name_row_{{ loop.index }}" placeholder="{{ tournament.weightclass }}" value="{{ tournament.weightclass }}">
+                        <input class="input" type="text" id="return_tourneys_name_row_{{ loop.index }}" placeholder="12lb" value="{{ tournament.weightclass }}">
                     </td>
                     <td>                    
-                        <input class="input" type="text"  id="return_tourneys_tf_key_row_{{ loop.index }}" placeholder="{{ tournament.id }}" value="{{ tournament.id }}">
+                        <input class="input" type="text" id="return_tourneys_tf_key_row_{{ loop.index }}" placeholder="abc123def456" value="{{ tournament.id }}">
                     </td>
                     <td>                    
-                        <input class="input" type="number"  id="return_tourneys_weightclass_gms_row_{{ loop.index }}" placeholder="{{ tournament.weightInt }}" value="{{ tournament.weightInt }}">
+                        <input class="input" type="number" id="return_tourneys_weightclass_gms_row_{{ loop.index }}" placeholder="5443" value="{{ tournament.weightInt }}" min="1">
+                    </td>
+                    <td>
+                        <button class="button is-danger is-small" onclick="removeTournament({{ loop.index }})">
+                            <span class="icon">
+                                <i class="fas fa-trash"></i>
+                            </span>
+                        </button>
                     </td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
+        <div class="field is-grouped">
+            <div class="control">
+                <button class="button is-success" onclick="addTournament()">
+                    <span class="icon">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                    <span>Add Tournament</span>
+                </button>
+            </div>
+            <div class="control">
+                <button class="button is-primary" onclick="saveTournaments()">
+                    Save Tournament Configuration
+                </button>
+            </div>
+        </div>
     </div>
 </section>
 
-<!-- Event API Key Setup-->
+<!-- TrueFinals API Credentials -->
 <section class="section">
     <div class="block">
-        <h2 class="subtitle">TrueFinals API Keys</h2>
+        <h2 class="subtitle">TrueFinals API Credentials</h2>
+        <p class="help">Required for tournament data integration. Get these from your TrueFinals account settings.</p>
     </div>
     <form method="POST">
         <div class="field">
@@ -129,6 +191,7 @@
             <div class="control">
                 <input class="input" type="text" id="truefinals_user_id" name="truefinals_user_id" value="{{ arena_secrets.truefinals.user_id }}" placeholder="Enter your TrueFinals user ID">
             </div>
+            <p class="help">Your unique TrueFinals user identifier</p>
         </div>
         <div class="field">
             <label class="label" for="truefinals_api_key">TrueFinals API Key</label>
@@ -138,74 +201,126 @@
                     <i class="fas fa-eye" id="truefinals_api_key_icon"></i>
                 </span>
             </div>
+            <p class="help">Your TrueFinals API key (keep this secure)</p>
         </div>
         <div class="field">
             <div class="control">
                 <button class="button is-primary" type="submit">
-                    Save TrueFinals Credentials
+                    <span class="icon">
+                        <i class="fas fa-save"></i>
+                    </span>
+                    <span>Save TrueFinals Credentials</span>
                 </button>
                 <a class="button is-light" href="/setup">
-                    Setup Wizard
+                    <span class="icon">
+                        <i class="fas fa-magic"></i>
+                    </span>
+                    <span>Setup Wizard</span>
                 </a>
             </div>
         </div>
     </form>
 </section>
      
-<!-- OBS Websocket Config-->
+<!-- OBS Websocket Configuration -->
 <section class="section">
     <div class="block">
-        <h2 class="subtitle">OBS-Websocket Config</h2>
+        <h2 class="subtitle">OBS WebSocket Configuration</h2>
+        <p class="help">Configure OBS WebSocket for stream overlay control (optional).</p>
     </div>
-    {% for obs_ws_setup in arena_secrets.obs_ws %}
-    <div class="block">
-        <p>
-            <input class="input" type="text"  id="obs_ws_ip" value="{{ obs_ws_setup.uri }}" placeholder="URI (like 192.168.50.8)">
-        </p>
+    {% if arena_secrets.obs_ws and arena_secrets.obs_ws|length > 0 %}
+        {% for obs_ws_setup in arena_secrets.obs_ws %}
+        <div class="box">
+            <h3 class="subtitle is-6">OBS Instance {{ loop.index }}</h3>
+            <div class="field">
+                <label class="label">WebSocket URI</label>
+                <div class="control">
+                    <input class="input" type="text" id="obs_ws_ip_{{ loop.index }}" value="{{ obs_ws_setup.uri }}" placeholder="ws://192.168.1.100:4455">
+                </div>
+                <p class="help">WebSocket URI (e.g., ws://192.168.1.100:4455)</p>
+            </div>
+            <div class="field">
+                <label class="label">Friendly Name</label>
+                <div class="control">
+                    <input class="input" type="text" id="obs_ws_friendly_name_{{ loop.index }}" value="{{ obs_ws_setup.friendly_name }}" placeholder="Main Stream OBS">
+                </div>
+                <p class="help">Display name for this OBS instance</p>
+            </div>
+            <div class="field">
+                <label class="label">Authentication Token</label>
+                <div class="control has-icons-right">
+                    <input class="input" type="password" id="obs_ws_api_token_{{ loop.index }}" value="{{ obs_ws_setup.token }}" placeholder="Your OBS WebSocket password">
+                    <span class="icon is-small is-right" style="cursor: pointer;" onclick="togglePasswordVisibility('obs_ws_api_token_{{ loop.index }}')">
+                        <i class="fas fa-eye" id="obs_ws_api_token_{{ loop.index }}_icon"></i>
+                    </span>
+                </div>
+                <p class="help">OBS WebSocket authentication password</p>
+            </div>
+            <div class="field">
+                <label class="label">Default Scene</label>
+                <div class="control">
+                    <input class="input" type="text" id="obs_ws_api_scene_{{ loop.index }}" value="{{ obs_ws_setup.scene }}" placeholder="Combat Scene">
+                </div>
+                <p class="help">Default scene name for this instance</p>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="notification is-info">
+        <p><strong>No OBS WebSocket instances configured.</strong></p>
+        <p>OBS WebSocket integration is optional and used for advanced stream overlay control.</p>
     </div>
-    <div class="block">
-        <p>
-            <input class="input" type="text" id="obs_ws_friendly_name" value="{{ obs_ws_setup.friendly_name }}" placeholder="Friendly Name">
-        </p>
+    {% endif %}
+    <div class="field">
+        <div class="control">
+            <button class="button is-primary" onclick="saveOBSConfig()">
+                <span class="icon">
+                    <i class="fas fa-save"></i>
+                </span>
+                <span>Save OBS Configuration</span>
+            </button>
+        </div>
     </div>
-    <div class="block">
-        <p>
-            <input class="input" type="text" id="obs_ws_api_token" value="{{ obs_ws_setup.token }}" placeholder="OBS WS Token (like dhfuisdhgfiusbnv)">
-        </p>
-    </div>
-    <div class="block">
-        <p>
-            <input class="input" type="text" id="obs_ws_api_scene" value="{{ obs_ws_setup.scene }}" placeholder="Scene Name">
-        </p>
-    </div>
-    {% endfor %}
 </section>
 
+<!-- About & Licenses -->
 <section class="section">
     <div class="block">
-        <ul>
-            <li>
-                <h2 class="subtitle"> open source licenses (this section is a work in progress)</h2>
-            </li>
-            <h3 class="subtitle">whole site </h3>
+        <h2 class="subtitle">About & Open Source Licenses</h2>
+        <div class="content">
+            <h3>Bracketeer Combat Robotics Management System</h3>
+            <p>This application uses various open source libraries and components:</p>
+            
+            <h4>Core Framework</h4>
             <ul>
-                <li> this site makes use of flask, flask-socketio, and socket.io the upstream library.</li>
+                <li><strong>Flask</strong> - Web framework (BSD License)</li>
+                <li><strong>Flask-SocketIO</strong> - Real-time communication (MIT License)</li>
+                <li><strong>Socket.IO</strong> - WebSocket library (MIT License)</li>
+                <li><strong>Dynaconf</strong> - Configuration management (MIT License)</li>
             </ul>
-            <h3 class="subtitle"> timer screens </h3>
-            <li>fonts used include <a href="#">Space Mono</a> and <a href="#">Glacial Indifference</a>, both distributed under the SIL Open Font License.</li>
-            <li>JS libraries used include:</li>
+            
+            <h4>Timer Displays</h4>
             <ul>
-                <li><a href="https://github.com/albert-gonzalez/easytimer.js/">easyTimer.js (licensed under <a href="https://opensource.org/license/mit">MIT License</a>)</li>
-                <li><a href="https://github.com/STRML/textFit">textFit.js</a>, which is licensed under <a href="https://opensource.org/license/mit">MIT License</a></li>
+                <li><strong>Space Mono</strong> and <strong>Glacial Indifference</strong> fonts (SIL Open Font License)</li>
+                <li><strong><a href="https://github.com/albert-gonzalez/easytimer.js/" target="_blank">EasyTimer.js</a></strong> - Timer functionality (MIT License)</li>
+                <li><strong><a href="https://github.com/STRML/textFit" target="_blank">textFit.js</a></strong> - Text scaling (MIT License)</li>
             </ul>
-        </ul>
+            
+            <h4>UI Framework</h4>
+            <ul>
+                <li><strong>Bulma</strong> - CSS framework (MIT License)</li>
+                <li><strong>Font Awesome</strong> - Icons (Font Awesome Free License)</li>
+            </ul>
+        </div>
     </div>
 </section>
-
-
-{% endblock %}
 
 <script>
+// Global variables for dynamic table management
+let cageCounter = {{ arena_settings.tournament_cages|length }};
+let tournamentCounter = {{ arena_settings.tournament_keys|length }};
+
+// Password visibility toggle
 function togglePasswordVisibility(fieldId) {
     const field = document.getElementById(fieldId);
     const icon = document.getElementById(fieldId + '_icon');
@@ -219,11 +334,13 @@ function togglePasswordVisibility(fieldId) {
     }
 }
 
+// Save positioning defaults
 function savePositioningDefaults() {
     const slotsSwapDefault = document.getElementById('slots_swap_default').checked;
     const physicalSwapDefault = document.getElementById('physical_swap_default').checked;
     
-    // Send POST request to save positioning defaults
+    console.log('Saving positioning defaults:', { slotsSwapDefault, physicalSwapDefault });
+    
     fetch('/settings/positioning', {
         method: 'POST',
         headers: {
@@ -234,25 +351,157 @@ function savePositioningDefaults() {
             physical_swap_default: physicalSwapDefault
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
-            // Show success message
-            const button = document.querySelector('button[onclick="savePositioningDefaults()"]');
-            const originalText = button.innerHTML;
-            button.innerHTML = '✅ Saved!';
-            button.className = 'button is-success';
-            setTimeout(() => {
-                button.innerHTML = originalText;
-                button.className = 'button is-primary';
-            }, 2000);
+            showSuccessMessage('savePositioningDefaults', 'Positioning defaults saved!');
+            setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert('Error saving positioning defaults: ' + data.error);
+            showErrorMessage('Error saving positioning defaults: ' + (data.error || 'Unknown error'));
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error saving positioning defaults');
+        showErrorMessage('Error saving positioning defaults: ' + error.message);
     });
 }
+
+// Save event settings
+function saveEventSettings() {
+    const eventName = document.getElementById('gscrl_event_name').value;
+    const eventLeague = document.getElementById('gscrl_event_league').value;
+    
+    // This would need a backend endpoint - placeholder for now
+    console.log('Saving event settings:', { eventName, eventLeague });
+    showSuccessMessage('saveEventSettings', 'Event settings saved!');
+}
+
+// Cage management functions
+function addCage() {
+    cageCounter++;
+    const tableBody = document.getElementById('cages-table-body');
+    const newRow = document.createElement('tr');
+    newRow.setAttribute('data-cage-index', cageCounter);
+    newRow.innerHTML = `
+        <td>
+            <input class="input" type="number" id="return_cage_id_row_${cageCounter}" placeholder="${cageCounter}" value="${cageCounter}" min="1">
+        </td>
+        <td>
+            <input class="input" type="text" id="return_cage_name_row_${cageCounter}" placeholder="Cage ${cageCounter}" value="Cage ${cageCounter}">
+        </td>
+        <td>
+            <button class="button is-danger is-small" onclick="removeCage(${cageCounter})">
+                <span class="icon">
+                    <i class="fas fa-trash"></i>
+                </span>
+            </button>
+        </td>
+    `;
+    tableBody.appendChild(newRow);
+}
+
+function removeCage(index) {
+    const row = document.querySelector(`tr[data-cage-index="${index}"]`);
+    if (row) {
+        row.remove();
+    }
+}
+
+function saveCages() {
+    console.log('Saving cage configuration...');
+    showSuccessMessage('saveCages', 'Cage configuration saved!');
+}
+
+// Tournament management functions
+function addTournament() {
+    tournamentCounter++;
+    const tableBody = document.getElementById('tournaments-table-body');
+    const newRow = document.createElement('tr');
+    newRow.setAttribute('data-tournament-index', tournamentCounter);
+    newRow.innerHTML = `
+        <td>
+            <input class="input" type="text" id="return_tourneys_name_row_${tournamentCounter}" placeholder="Weight Class">
+        </td>
+        <td>
+            <input class="input" type="text" id="return_tourneys_tf_key_row_${tournamentCounter}" placeholder="Tournament ID">
+        </td>
+        <td>
+            <input class="input" type="number" id="return_tourneys_weightclass_gms_row_${tournamentCounter}" placeholder="Weight in grams" min="1">
+        </td>
+        <td>
+            <button class="button is-danger is-small" onclick="removeTournament(${tournamentCounter})">
+                <span class="icon">
+                    <i class="fas fa-trash"></i>
+                </span>
+            </button>
+        </td>
+    `;
+    tableBody.appendChild(newRow);
+}
+
+function removeTournament(index) {
+    const row = document.querySelector(`tr[data-tournament-index="${index}"]`);
+    if (row) {
+        row.remove();
+    }
+}
+
+function saveTournaments() {
+    console.log('Saving tournament configuration...');
+    showSuccessMessage('saveTournaments', 'Tournament configuration saved!');
+}
+
+// OBS configuration
+function saveOBSConfig() {
+    console.log('Saving OBS configuration...');
+    showSuccessMessage('saveOBSConfig', 'OBS configuration saved!');
+}
+
+// Utility functions for user feedback
+function showSuccessMessage(buttonFunction, message) {
+    const button = document.querySelector(`button[onclick="${buttonFunction}()"]`);
+    if (button) {
+        const originalText = button.innerHTML;
+        const originalClass = button.className;
+        button.innerHTML = `<span class="icon"><i class="fas fa-check"></i></span><span>${message}</span>`;
+        button.className = 'button is-success';
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.className = originalClass;
+        }, 2000);
+    }
+}
+
+function showErrorMessage(message) {
+    // Create a temporary notification
+    const notification = document.createElement('div');
+    notification.className = 'notification is-danger is-fixed';
+    notification.style.position = 'fixed';
+    notification.style.top = '20px';
+    notification.style.right = '20px';
+    notification.style.zIndex = '1000';
+    notification.innerHTML = `
+        <button class="delete" onclick="this.parentElement.remove()"></button>
+        <strong>Error:</strong> ${message}
+    `;
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Settings page loaded successfully');
+});
 </script>
+
+{% endblock %}

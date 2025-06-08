@@ -201,6 +201,8 @@ def generateSettingsPage():
         return redirect(url_for('generateSettingsPage'))
 
 
+# REPLACE the savePositioningDefaults function in __main__.py (around lines 201-230)
+
 @app.route("/settings/positioning", methods=["POST"])
 @runtime_err_warn
 def savePositioningDefaults():
@@ -209,6 +211,8 @@ def savePositioningDefaults():
         data = request.get_json()
         slots_swap_default = data.get('slots_swap_default', False)
         physical_swap_default = data.get('physical_swap_default', False)
+        
+        logging.info(f"Saving positioning defaults: slots_swap={slots_swap_default}, physical_swap={physical_swap_default}")
         
         # Read current event.json
         with open('event.json', 'r') as f:
@@ -225,13 +229,27 @@ def savePositioningDefaults():
         with open('event.json', 'w') as f:
             json.dump(event_config, f, indent=2)
         
-        # Reload Dynaconf settings
-        from dynaconf import settings
+        # CRITICAL: Force Dynaconf to reload the settings
+        from bracketeer.config import settings
         settings.reload()
         
-        return jsonify({'success': True, 'message': 'Positioning defaults saved successfully'})
+        logging.info(f"Settings saved and reloaded. Verification: slots_swap={settings.get('red_blue_positioning', {}).get('slots_swap_default')}, physical_swap={settings.get('red_blue_positioning', {}).get('physical_swap_default')}")
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Positioning defaults saved successfully',
+            'saved_values': {
+                'slots_swap_default': slots_swap_default,
+                'physical_swap_default': physical_swap_default
+            },
+            'reloaded_values': {
+                'slots_swap_default': settings.get('red_blue_positioning', {}).get('slots_swap_default'),
+                'physical_swap_default': settings.get('red_blue_positioning', {}).get('physical_swap_default')
+            }
+        })
         
     except Exception as e:
+        logging.error(f"Error saving positioning defaults: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
