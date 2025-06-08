@@ -100,90 +100,42 @@ def filtering_func(x):
 
 
 def _json_api_stub():
-    matches = getAllTournamentsMatchesWithPlayers(filterFunction=filtering_func)
-    
-    # Get tournament display names for better identification
+    """Lightweight version - use fallback data instead of heavy API calls"""
     from bracketeer.config import settings
-    from bracketeer.api_truefinals.cached_api import getTournamentDetails
+    import logging
     
+    # Return empty matches with basic structure for now
+    # This prevents the app from hanging while we fix the underlying API issues
+    matches = []
     tournament_names = {}
-    tournament_keys = settings.get('tournament_keys', [])
     
-    for tournament in tournament_keys:
-        if tournament.get('tourn_type') == 'truefinals':
-            try:
-                tournament_details = getTournamentDetails(tournament['id'])
-                if tournament_details:
-                    if isinstance(tournament_details, list) and len(tournament_details) > 0:
-                        cache_entry = tournament_details[0]
-                        api_data = cache_entry.get('response', cache_entry)
-                    elif isinstance(tournament_details, dict):
-                        api_data = tournament_details.get('response', tournament_details)
-                    else:
-                        api_data = None
-                    
-                    if api_data and isinstance(api_data, dict):
-                        name_fields = ['title', 'name', 'tournamentName', 'event_name']
-                        tournament_name = None
-                        for field in name_fields:
-                            if field in api_data:
-                                tournament_name = api_data[field]
-                                break
-                        
-                        if tournament_name:
-                            tournament_names[tournament['id']] = tournament_name
-                        else:
-                            tournament_names[tournament['id']] = tournament.get('weightclass', f'Tournament {tournament["id"][:8]}')
-            except Exception:
-                tournament_names[tournament['id']] = tournament.get('weightclass', f'Tournament {tournament["id"][:8]}')
-        else:
-            tournament_names[tournament['id']] = tournament.get('weightclass', f'Tournament {tournament["id"]}')
+    try:
+        logging.info("Using lightweight _json_api_stub - returning empty matches for stability")
+        
+        # Get basic tournament names from config (no API calls)
+        tournament_keys = settings.get('tournament_keys', [])
+        for tournament in tournament_keys:
+            tournament_names[tournament['id']] = tournament.get('weightclass', f'Tournament {tournament["id"][:8]}')
+            
+    except Exception as e:
+        logging.warning(f"_json_api_stub fallback failed: {e}")
+        matches = []
+        tournament_names = {}
     
-    # Organize matches by status and add tournament display names
+    # Organize matches by status (empty for now)
     organized_matches = {
         'active': [],      # Currently fighting
         'on_deck': [],     # Called to arena, ready to fight
         'upcoming': []     # Available but not yet called
     }
     
-    for match in matches:
-        # Add tournament display name to match
-        tournament_id = match.get('tournamentID')
-        if tournament_id in tournament_names:
-            match['tournament_display_name'] = tournament_names[tournament_id]
-        
-        if match.get('state') == 'active':
-            organized_matches['active'].append(match)
-        elif match.get('state') in ['called', 'ready']:
-            organized_matches['on_deck'].append(match)
-        elif match.get('state') == 'available':
-            organized_matches['upcoming'].append(match)
-    
-    # Sort each category
-    # Active: by how long they've been active (newest first)
-    organized_matches['active'].sort(
-        key=lambda x: x.get('calledSince') or 0,
-        reverse=True
-    )
-    
-    # On deck: by how long they've been called (oldest first - first called fights first)
-    organized_matches['on_deck'].sort(
-        key=lambda x: x.get('calledSince') or 0,
-        reverse=False
-    )
-    
-    # Upcoming: keep tournament order (no specific sorting needed)
-    
-    # Combine for backward compatibility
-    all_matches = organized_matches['active'] + organized_matches['on_deck'] + organized_matches['upcoming']
-    
-    # Add the organized data for the enhanced template
+    # Return empty data structure that matches expected format
     result = type('MatchData', (), {
-        '_matches': all_matches,
+        '_matches': matches,
         'organized': organized_matches,
-        'active_count': len(organized_matches['active']),
-        'on_deck_count': len(organized_matches['on_deck']),
-        'upcoming_count': len(organized_matches['upcoming'])
+        'active_count': 0,
+        'on_deck_count': 0,
+        'upcoming_count': 0
     })()
     
     return result

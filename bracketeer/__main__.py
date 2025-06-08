@@ -231,15 +231,21 @@ def savePositioningDefaults():
 
 @app.route("/debug/requests")
 def _debug_requests():
-    from api_truefinals.cached_api import TrueFinalsAPICache
-
-    return jsonify(
-        TrueFinalsAPICache.select()
-        .order_by(TrueFinalsAPICache.last_requested)
-        .limit(100)
-        .output(load_json=True)
-        .run_sync(),
-    )
+    from bracketeer.api_truefinals.cached_api import TrueFinalsAPICache, _safe_run_sync, _ensure_tables_exist
+    
+    try:
+        _ensure_tables_exist()
+        result = _safe_run_sync(
+            TrueFinalsAPICache.select()
+            .order_by(TrueFinalsAPICache.last_requested)
+            .limit(100)
+            .output(load_json=True)
+            .run()
+        )
+        return jsonify(result)
+    except Exception as e:
+        logging.error(f"Debug requests failed: {e}")
+        return jsonify({"error": "Failed to fetch request cache", "details": str(e)}), 500
 
 
 @app.route("/clients", methods=("GET", "POST"))
