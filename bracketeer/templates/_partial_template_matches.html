@@ -25,19 +25,19 @@
     <div class="panel-block" style="display: block; ">
         <nav class="level">
                 <div class="level-item">
-                    <input class="input" id="placeholder_red_name" type="text" placeholder="Red Bot Name">
+                    <input class="input is-large" id="placeholder_red_name" type="text" placeholder="🔴 Red Robot Name" style="font-size: 1.25rem;">
                 </div>
                 <div class="level-item">
-                    <p> vs </p>
+                    <p class="is-size-3 has-text-weight-bold"> VS </p>
                 </div>
                 <div class="level-item">
-                    <input class="input" id="placeholder_blue_name" type="text" placeholder="Blue Bot Name">
+                    <input class="input is-large" id="placeholder_blue_name" type="text" placeholder="🔵 Blue Robot Name" style="font-size: 1.25rem;">
                 </div>
 
                 <div class="level-right">
                     <div class="level-item">
                         <p>
-                            <button class="button" title="Load bot names to tablets." onclick="load_competitors_names('placeholder_red_name', 'placeholder_blue_name');">⤴</button>
+                            <button class="button is-success is-large" title="Send robot names to competitor tablets" onclick="load_competitors_names('placeholder_red_name', 'placeholder_blue_name');">📤 LOAD</button>
                         </p>
                     </div>
                 </div>
@@ -57,24 +57,37 @@
                     <span class="panel-icon">
                         <i class="fas fa-explosion" aria-hidden="true"></i>
                       </span>
-                      <p>
-                        Match {{ match['name'] }} [ {{ weightclass }} ]<br>
-                      <!-- {{ match }} -->
+                      <div>
+                        <div class="is-size-6 has-text-weight-bold mb-2">
+                            Match {{ match['name'] }} [ {{ weightclass }} ]
+                        </div>
                         
-                        <span id="r{{ loop.index }}_red_competitor_name">
-                            <a target="_blank" href="https://www.truefinals.com/tournament/{{ match['slots'][0]['bracketeer_player_data']['root_tournament_fk'] }}/playerpath/{{ match['slots'][0]['bracketeer_player_data']['id'] }}">{{ match['slots'][0]['bracketeer_player_data']['name'] }}</a>
-                        </span>
-                        <span class="icon has-text-danger">
-                            <i class="fas fa-circle"></i>
-                        </span>
-                           vs 
-                        <span id="r{{ loop.index }}_blue_competitor_name">
-                            <a target="_blank" href="https://www.truefinals.com/tournament/{{ match['slots'][1]['bracketeer_player_data']['root_tournament_fk'] }}/playerpath/{{ match['slots'][1]['bracketeer_player_data']['id'] }}">{{ match['slots'][1]['bracketeer_player_data']['name'] }}</a>
-                        </span>
-                           <span class="icon has-text-info">
-                            <i class="fas fa-circle"></i>
-                          </span>
-                      </p>
+                        <!-- BLUE CORNER (TOP) -->
+                        <div class="box has-background-info-light mb-2" style="padding: 0.75rem;">
+                            <div class="has-text-centered">
+                                <span class="tag is-info is-medium mb-1">🔵 BLUE CORNER (TOP)</span>
+                            </div>
+                            <div class="has-text-centered">
+                                <span id="r{{ loop.index }}_blue_competitor_name" class="is-size-6 has-text-weight-bold">
+                                    <a target="_blank" href="https://www.truefinals.com/tournament/{{ match['slots'][1]['bracketeer_player_data']['root_tournament_fk'] }}/playerpath/{{ match['slots'][1]['bracketeer_player_data']['id'] }}">{{ match['slots'][1]['bracketeer_player_data']['name'] }}</a>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="has-text-centered has-text-weight-bold is-size-5 mb-2">VS</div>
+                        
+                        <!-- RED CORNER (BOTTOM) -->
+                        <div class="box has-background-danger-light" style="padding: 0.75rem;">
+                            <div class="has-text-centered">
+                                <span class="tag is-danger is-medium mb-1">🔴 RED CORNER (BOTTOM)</span>
+                            </div>
+                            <div class="has-text-centered">
+                                <span id="r{{ loop.index }}_red_competitor_name" class="is-size-6 has-text-weight-bold">
+                                    <a target="_blank" href="https://www.truefinals.com/tournament/{{ match['slots'][0]['bracketeer_player_data']['root_tournament_fk'] }}/playerpath/{{ match['slots'][0]['bracketeer_player_data']['id'] }}">{{ match['slots'][0]['bracketeer_player_data']['name'] }}</a>
+                                </span>
+                            </div>
+                        </div>
+                      </div>
                 </div>
             </div>
 
@@ -99,7 +112,7 @@
             <div class="level-right">
                 <div class="level-item">
                     <p>
-                        <button class="button" title="Load bot names to tablets." onclick="load_competitors_names( 'r{{ loop.index }}_red_competitor_name', 'r{{ loop.index }}_blue_competitor_name');">⤴</button>
+                        <button class="button is-success" title="Load these robot names to tablets" onclick="load_competitors_names( 'r{{ loop.index }}_red_competitor_name', 'r{{ loop.index }}_blue_competitor_name');">📤</button>
                     </p>
                 </div>
             </div>

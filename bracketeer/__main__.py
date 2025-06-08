@@ -236,6 +236,40 @@ def generateSettingsPage():
         return redirect(url_for('generateSettingsPage'))
 
 
+@app.route("/settings/positioning", methods=["POST"])
+@runtime_err_warn
+def savePositioningDefaults():
+    """Save red/blue positioning defaults to event.json"""
+    try:
+        data = request.get_json()
+        slots_swap_default = data.get('slots_swap_default', False)
+        physical_swap_default = data.get('physical_swap_default', False)
+        
+        # Read current event.json
+        with open('event.json', 'r') as f:
+            event_config = json.load(f)
+        
+        # Update positioning settings
+        event_config['red_blue_positioning'] = {
+            'slots_swap_default': slots_swap_default,
+            'physical_swap_default': physical_swap_default,
+            'description': 'Default red/blue positioning for all cages. slots_swap_default fixes TrueFinals slot assignment when backwards. physical_swap_default handles robots entering opposite corners.'
+        }
+        
+        # Save updated config
+        with open('event.json', 'w') as f:
+            json.dump(event_config, f, indent=2)
+        
+        # Reload Dynaconf settings
+        from dynaconf import settings
+        settings.reload()
+        
+        return jsonify({'success': True, 'message': 'Positioning defaults saved successfully'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route("/debug/requests")
 def _debug_requests():
     from api_truefinals.cached_api import TrueFinalsAPICache

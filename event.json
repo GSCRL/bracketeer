@@ -1,21 +1,20 @@
 {
-  "event_name": "June Jumble 2025",
+  "event_name": "June Jumble 2025 Day 2",
   "event_league": "GDQ9999",
-  "event_date": "2025-06-07",
+  "event_date": "2025-06-08",
   "match_duration": 150,
   "countdown_duration": 3,
+  "red_blue_positioning": {
+    "slots_swap_default": false,
+    "physical_swap_default": false,
+    "description": "Default red/blue positioning for all cages. slots_swap_default fixes TrueFinals slot assignment when backwards. physical_swap_default handles robots entering opposite corners."
+  },
   "tournament_keys": [
     {
-      "id": "bb6ccd1f72f24242",
+      "id": "250968edf15b42fd",
       "tourn_type": "truefinals",
       "weightInt": 0,
-      "weightclass": "Tournament bb6ccd1f72f24242"
-    },
-    {
-      "id": "a2be9a1941f044cc",
-      "tourn_type": "truefinals",
-      "weightInt": 0,
-      "weightclass": "Tournament a2be9a1941f044cc"
+      "weightclass": "Tournament 250968edf15b42fd"
     }
   ],
   "tournament_cages": [

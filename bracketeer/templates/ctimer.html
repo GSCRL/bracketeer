@@ -7,6 +7,18 @@
 
 <script>
   var cageID = {{ cageID }};
+  
+  // Get global defaults from server
+  var globalSlotsSwapDefault = {% if arena_settings.red_blue_positioning and arena_settings.red_blue_positioning.slots_swap_default %}true{% else %}false{% endif %};
+  var globalPhysicalSwapDefault = {% if arena_settings.red_blue_positioning and arena_settings.red_blue_positioning.physical_swap_default %}true{% else %}false{% endif %};
+  
+  // Initialize from localStorage or fall back to global defaults
+  var isSwapped = localStorage.getItem(`cage_${cageID}_swapped`) !== null 
+    ? localStorage.getItem(`cage_${cageID}_swapped`) === 'true'
+    : globalPhysicalSwapDefault;
+  var slotsSwapped = localStorage.getItem(`cage_${cageID}_slots_swapped`) !== null
+    ? localStorage.getItem(`cage_${cageID}_slots_swapped`) === 'true' 
+    : globalSlotsSwapDefault;
 
   /* fetch() is async by default, not trivially compatible with the shown
    below architecture.  Lovely.
@@ -72,6 +84,11 @@
           called_since_updates[item].innerHTML = "Called " + time_ago(timestamps);
         }
       }
+      
+      // Apply slot swapping if enabled after the schedule is loaded
+      if (slotsSwapped) {
+          applySlotSwapToMatchQueue();
+      }
     });
 
   /* HELPERS FOR EMITTING MESSAGES */
@@ -90,7 +107,19 @@ function load_competitors_names(red_name, blue_name) {
       var red_placeholder = red_temp.value;
       var blue_placeholder = blue_temp.value;
     }
-   socket.emit('robot_match_color_name', cageID=cageID, red_name = red_placeholder, blue_name=blue_placeholder);
+    
+    // Apply slot assignment logic
+    // If slotsSwapped is true, the template red_name actually contains the blue robot and vice versa
+    // This happens when TrueFinals has slots[0]/slots[1] backwards from our expectation
+    var actualRedName = slotsSwapped ? blue_placeholder : red_placeholder;
+    var actualBlueName = slotsSwapped ? red_placeholder : blue_placeholder;
+    
+    // Apply physical position swapping if enabled (robots entered opposite corners)
+    if (isSwapped) {
+      socket.emit('robot_match_color_name', cageID=cageID, red_name = actualBlueName, blue_name=actualRedName);
+    } else {
+      socket.emit('robot_match_color_name', cageID=cageID, red_name = actualRedName, blue_name=actualBlueName);
+    }
 }
 
   function refresh_schedule_please() {
@@ -117,15 +146,131 @@ function load_competitors_names(red_name, blue_name) {
     }
   }
 
+  function toggleSwap() {
+      isSwapped = !isSwapped;
+      localStorage.setItem(`cage_${cageID}_swapped`, isSwapped);
+      updateSwapButtonText();
+      resetTeamReadies();
+  }
+  
+  function toggleSlotAssignment() {
+      slotsSwapped = !slotsSwapped;
+      localStorage.setItem(`cage_${cageID}_slots_swapped`, slotsSwapped);
+      updateSlotSwapButtonText();
+      applySlotSwapToMatchQueue(); // Update match queue display immediately
+  }
+  
+  function applySlotSwapToMatchQueue() {
+      // Find all match queue items and swap their red/blue assignments
+      var matches = document.querySelectorAll('[id*="_red_competitor_name"], [id*="_blue_competitor_name"]');
+      
+      for (var i = 0; i < matches.length; i++) {
+          var element = matches[i];
+          var isRedElement = element.id.includes('_red_competitor_name');
+          var isBlueElement = element.id.includes('_blue_competitor_name');
+          
+          if (isRedElement || isBlueElement) {
+              var matchIndex = element.id.match(/r(\d+)_/);
+              if (matchIndex) {
+                  var idx = matchIndex[1];
+                  var redElement = document.getElementById(`r${idx}_red_competitor_name`);
+                  var blueElement = document.getElementById(`r${idx}_blue_competitor_name`);
+                  
+                  if (redElement && blueElement && slotsSwapped) {
+                      // Swap the content but keep the IDs the same for load_competitors_names to work
+                      var redContent = redElement.innerHTML;
+                      var blueContent = blueElement.innerHTML;
+                      redElement.innerHTML = blueContent;
+                      blueElement.innerHTML = redContent;
+                  }
+              }
+          }
+      }
+      
+      // Also update any visual indicators that might exist
+      updateMatchQueueLabels();
+  }
+  
+  function updateMatchQueueLabels() {
+      // Update the labels to reflect the current slot assignment
+      var redTags = document.querySelectorAll('.tag.is-danger');
+      var blueTags = document.querySelectorAll('.tag.is-info');
+      
+      redTags.forEach(function(tag) {
+          if (tag.innerHTML.includes('RED CORNER')) {
+              tag.innerHTML = slotsSwapped ? '🔵 BLUE CORNER (TOP)' : '🔴 RED CORNER (BOTTOM)';
+              tag.className = slotsSwapped ? 'tag is-info is-medium mb-1' : 'tag is-danger is-medium mb-1';
+          }
+      });
+      
+      blueTags.forEach(function(tag) {
+          if (tag.innerHTML.includes('BLUE CORNER')) {
+              tag.innerHTML = slotsSwapped ? '🔴 RED CORNER (BOTTOM)' : '🔵 BLUE CORNER (TOP)';
+              tag.className = slotsSwapped ? 'tag is-danger is-medium mb-1' : 'tag is-info is-medium mb-1';
+          }
+      });
+  }
+  
+  function updateSwapButtonText() {
+      var button = document.getElementById("swapButton");
+      if (button) {
+          button.innerHTML = isSwapped ? "🔄 SWAPPED POSITIONS" : "🔄 NORMAL POSITIONS";
+          button.className = isSwapped ? "button is-danger is-large" : "button is-warning is-large";
+      }
+  }
+  
+  function updateSlotSwapButtonText() {
+      var button = document.getElementById("slotSwapButton");
+      if (button) {
+          button.innerHTML = slotsSwapped ? "📋 SLOTS SWAPPED" : "📋 NORMAL SLOTS";
+          button.className = slotsSwapped ? "button is-danger is-medium" : "button is-info is-medium";
+          button.title = slotsSwapped ? "TrueFinals slots swapped: slot[0]=BLUE, slot[1]=RED" : "TrueFinals normal: slot[0]=RED, slot[1]=BLUE";
+      }
+  }
+  
+  function resetToEventDefaults() {
+      // Reset to global event defaults
+      isSwapped = globalPhysicalSwapDefault;
+      slotsSwapped = globalSlotsSwapDefault;
+      
+      // Update localStorage to match
+      localStorage.setItem(`cage_${cageID}_swapped`, isSwapped);
+      localStorage.setItem(`cage_${cageID}_slots_swapped`, slotsSwapped);
+      
+      // Update UI
+      updateSwapButtonText();
+      updateSlotSwapButtonText();
+      resetTeamReadies();
+      
+      // Update match queue if needed
+      if (slotsSwapped) {
+          applySlotSwapToMatchQueue();
+      }
+      
+      // Show feedback
+      var button = document.getElementById("resetDefaultsButton");
+      var originalText = button.innerHTML;
+      button.innerHTML = "✅ Reset!";
+      button.className = "button is-success is-small";
+      setTimeout(() => {
+          button.innerHTML = originalText;
+          button.className = "button is-light is-small";
+      }, 2000);
+  }
+
   function readyup(botColor) {
-      socket.emit('player_ready', {'playerColor': botColor, "cageID": cageID });
+      // Apply swapping logic
+      var actualColor = isSwapped ? (botColor === "red" ? "blue" : "red") : botColor;
+      socket.emit('player_ready', {'playerColor': actualColor, "cageID": cageID });
 
       if (botColor === "red") {
-          document.getElementById("redisready").innerText = "RED READY";
+          document.getElementById("redisready").innerHTML = "✅ RED READY";
+          document.getElementById("redisready").className = "button is-success is-large is-fullwidth";
       }
 
       if (botColor === "blue") {
-          document.getElementById("blueisready").innerText = "RED READY";
+          document.getElementById("blueisready").innerHTML = "✅ BLUE READY";
+          document.getElementById("blueisready").className = "button is-success is-large is-fullwidth";
       }
   }
 
@@ -293,19 +438,26 @@ function eSTOP() {
 // changes the state of the readies for next.
 function resetTeamReadies() {
   resetTeamReadyButtons();
-  document.getElementById("redisready").innerText = "NOT READY";
-  document.getElementById("blueisready").innerText = "NOT READY";
+  document.getElementById("redisready").innerHTML = "❌ NOT READY";
+  document.getElementById("redisready").className = "button is-danger is-large is-fullwidth";
+  document.getElementById("blueisready").innerHTML = "❌ NOT READY";
+  document.getElementById("blueisready").className = "button is-info is-large is-fullwidth";
 }
 
 // set the timer display for ready / not ready.  just an indicator status.
 socket.on("control_player_ready_event", (station_info) => {
   console.log(station_info);
-  if (station_info.playerColor === "red") {
-      document.getElementById("redisready").innerText = "[READY]";
+  // Apply reverse swapping logic for display
+  var displayColor = isSwapped ? (station_info.playerColor === "red" ? "blue" : "red") : station_info.playerColor;
+  
+  if (displayColor === "red") {
+      document.getElementById("redisready").innerHTML = "✅ RED READY";
+      document.getElementById("redisready").className = "button is-success is-large is-fullwidth";
   }
 
-  if (station_info.playerColor === "blue") {
-      document.getElementById("blueisready").innerText = "[READY]";
+  if (displayColor === "blue") {
+      document.getElementById("blueisready").innerHTML = "✅ BLUE READY";
+      document.getElementById("blueisready").className = "button is-success is-large is-fullwidth";
   }
 });
 
@@ -341,49 +493,149 @@ function manualTimerInput() {
 <label id="color_picker_label" for="hidden_color_picker" style="display:none;"></label>
 <input type="color" id="hidden_color_picker" style="display:none;" onchange="change_colors();">
 
-<section class="section">
-    <div class="container">
-      <h1 class="title">
-        Match Timer (Cage {{ cageID }})
-      </h1>
-      <p class="subtitle">
-        (only one instance of this page can be open)
-      </p>
+<section class="hero is-dark">
+    <div class="hero-body">
+      <div class="container has-text-centered">
+        <h1 class="title is-1">
+          🥊 MATCH CONTROL - CAGE {{ cageID }}
+        </h1>
+        <h2 class="subtitle is-3">
+          Judge Timer Interface
+        </h2>
+        <p class="is-size-5 has-text-warning">
+          ⚠️ Only one instance of this page should be open per cage
+        </p>
+      </div>
     </div>
   </section>
 
   <section class="section">
-    <div class="columns"> 
-      <div class="column"> <!-- left column original -->
-        <div class="block">
-          <style>
-            .third-widths {
-              width: 33%;
-            }
-          </style>
-            <div class="buttons has-addons is-fullwidth">
-                <button class="button is-danger is-light is-large third-widths" id="redisready" onclick="readyup('red');">NOT READY</button>
-                <button id="heartbeat_button_id" class="button is-large is-danger third-widths" disabled>[HB]</button>
-                <button class="button is-info is-light is-large third-widths" id="blueisready" onclick="readyup('blue');">NOT READY</button>
+    <div class="columns is-desktop"> 
+      <div class="column is-8"> <!-- Main controls column -->
+        
+        <!-- ROBOT READY STATUS SECTION -->
+        <div class="box has-background-grey-darker">
+          <h3 class="title is-3 has-text-white has-text-centered mb-4">
+            🤖 ROBOT READY STATUS
+          </h3>
+          <div class="columns is-mobile">
+            <div class="column has-text-centered">
+              <h4 class="subtitle is-4 has-text-danger has-text-weight-bold">RED CORNER</h4>
+              <button class="button is-danger is-large is-fullwidth" id="redisready" onclick="readyup('red');" style="min-height: 4rem; font-size: 1.5rem;">
+                ❌ NOT READY
+              </button>
             </div>
-        </div>
-
-        <div class="block">
-          <style>
-            .fifth-widths {
-              width: 20%;
-            }
-          </style>
-          <div class="buttons has-addons is-fullwidth">
-            <button class="button is-large is-dark" id="timer_control_counter" onclick="manualTimerInput();">000</button>
-            <button class="button is-large" onclick="startTimer();">Start▶️</button>
-            <button class="button is-large" onclick="pauseTimer();">Pause⏸️</button>
-            <button class="button is-large"  onclick="stopTimer();">Stop⏹️</button>
-            <button class="button is-large is-hidden-mobile"  onclick="manualTimerInput();">Change🖩</button>
+            <div class="column is-narrow has-text-centered" style="display: flex; align-items: center; justify-content: center;">
+              <div>
+                <p class="has-text-white is-size-6 mb-2">CONNECTION</p>
+                <button id="heartbeat_button_id" class="button is-large is-danger" disabled style="min-height: 3rem; min-width: 4rem;">
+                  💓
+                </button>
+              </div>
+            </div>
+            <div class="column has-text-centered">
+              <h4 class="subtitle is-4 has-text-info has-text-weight-bold">BLUE CORNER</h4>
+              <button class="button is-info is-large is-fullwidth" id="blueisready" onclick="readyup('blue');" style="min-height: 4rem; font-size: 1.5rem;">
+                ❌ NOT READY
+              </button>
+            </div>
+          </div>
+          
+          <!-- RED/BLUE SWAP CONTROLS -->
+          <div class="has-text-centered mt-4">
+            <div class="field is-grouped is-grouped-centered">
+              <div class="control">
+                <button id="swapButton" class="button is-warning is-large" onclick="toggleSwap();" style="min-height: 3rem; font-size: 1.25rem;">
+                  🔄 NORMAL POSITIONS
+                </button>
+              </div>
+            </div>
+            <p class="has-text-white is-size-6 mt-1">
+              💡 Use swap when robots enter opposite corners
+            </p>
+            
+            <div class="field is-grouped is-grouped-centered mt-3">
+              <div class="control">
+                <button id="slotSwapButton" class="button is-info is-medium" onclick="toggleSlotAssignment();" style="min-height: 2.5rem;">
+                  📋 NORMAL SLOTS
+                </button>
+              </div>
+            </div>
+            <p class="has-text-white is-size-7 mt-1">
+              ⚙️ Fix TrueFinals slot assignment if red/blue are backwards in match queue
+            </p>
+            
+            <div class="field is-grouped is-grouped-centered mt-3">
+              <div class="control">
+                <button id="resetDefaultsButton" class="button is-light is-small" onclick="resetToEventDefaults();">
+                  🔄 Reset to Event Defaults
+                </button>
+              </div>
+            </div>
+            <p class="has-text-white is-size-7 mt-1">
+              📝 Restore settings configured in <a href="/settings" class="has-text-info">Event Settings</a>
+            </p>
           </div>
         </div>
 
-        <div class="block">
+        <!-- TIMER CONTROLS SECTION -->
+        <div class="box has-background-primary-dark">
+          <h3 class="title is-3 has-text-white has-text-centered mb-4">
+            ⏱️ MATCH TIMER CONTROLS
+          </h3>
+          
+          <!-- Timer Display -->
+          <div class="has-text-centered mb-4">
+            <div class="box has-background-black" style="display: inline-block; padding: 2rem;">
+              <button class="button is-large is-dark has-text-weight-bold" id="timer_control_counter" onclick="manualTimerInput();" style="font-size: 4rem; min-width: 8rem; min-height: 6rem; border: 3px solid #fff;">
+                000
+              </button>
+            </div>
+            <p class="has-text-white is-size-6 mt-2">
+              💡 Click timer to manually adjust time
+            </p>
+          </div>
+          
+          <!-- Timer Control Buttons -->
+          <div class="columns is-mobile">
+            <div class="column">
+              <button class="button is-success is-large is-fullwidth" onclick="startTimer();" style="min-height: 4rem; font-size: 1.5rem;">
+                ▶️ START
+              </button>
+            </div>
+            <div class="column">
+              <button class="button is-warning is-large is-fullwidth" onclick="pauseTimer();" style="min-height: 4rem; font-size: 1.5rem;">
+                ⏸️ PAUSE
+              </button>
+            </div>
+            <div class="column">
+              <button class="button is-danger is-large is-fullwidth" onclick="stopTimer();" style="min-height: 4rem; font-size: 1.5rem;">
+                ⏹️ STOP
+              </button>
+            </div>
+            <div class="column is-hidden-mobile">
+              <button class="button is-info is-large is-fullwidth" onclick="manualTimerInput();" style="min-height: 4rem; font-size: 1.25rem;">
+                🖩 ADJUST
+              </button>
+            </div>
+          </div>
+          
+          <!-- Emergency Stop -->
+          <div class="has-text-centered mt-4">
+            <button class="button is-danger is-large" onclick="eSTOP();" style="min-height: 3rem; font-size: 1.25rem; border: 3px solid #ff0000;">
+              🚨 EMERGENCY STOP
+            </button>
+            <p class="has-text-white is-size-6 mt-2">
+              💡 Press SPACEBAR for emergency stop
+            </p>
+          </div>
+        </div>
+
+        <!-- STATUS MESSAGE SECTION -->
+        <div class="box has-background-info-dark">
+          <h3 class="title is-4 has-text-white has-text-centered mb-4">
+            💬 SCREEN MESSAGE
+          </h3>
           <div class="field has-addons">
             <p class="control is-expanded">
               <script>
@@ -395,46 +647,71 @@ function manualTimerInput() {
                   }
                 }
               </script>
-              <input class="input" id="sendmessagebox" type="text" placeholder="Status message to send on screens." onkeydown="search(this)">
+              <input class="input is-large" id="sendmessagebox" type="text" placeholder="Type message to display on all screens..." onkeydown="search(this)" style="font-size: 1.25rem;">
             </p>
             <p class="control">            
-              <a class="button is-info is-light" onclick="sendTimerMessage();">
-                ⟫
-              </a>
+              <button class="button is-success is-large" onclick="sendTimerMessage();" style="min-height: 3.5rem; font-size: 1.25rem;">
+                📤 SEND
+              </button>
             </p>
           </div>
+          <p class="has-text-white is-size-6 mt-2 has-text-centered">
+            💡 Press ENTER or click SEND to broadcast message
+          </p>
         </div>
 
-        <div class="block">
-          <div class="buttons">
-            <script>
-              function _hidden_test_sound() {
-                socket.emit("c_play_sound_event", {'cageID': cageID, 'sound': 'mid_match_chime'});
-              }
+        <!-- CAGE CONTROLS SECTION -->
+        <div class="box has-background-grey-dark">
+          <h3 class="title is-4 has-text-white has-text-centered mb-4">
+            🛠️ CAGE CONTROLS
+          </h3>
+          <div class="columns is-mobile">
+            <div class="column">
+              <script>
+                function _hidden_test_sound() {
+                  socket.emit("c_play_sound_event", {'cageID': cageID, 'sound': 'mid_match_chime'});
+                }
 
-              function _hidden_hide_timer() {
-                socket.emit("timer_event", generateTimerMessage(""));
-              }
-              function _hidden_cage_safe() {
-                socket.emit("timer_bg_event", generateBackgroundMessage("lightgreen"));
-              }
+                function _hidden_hide_timer() {
+                  socket.emit("timer_event", generateTimerMessage(""));
+                }
+                function _hidden_cage_safe() {
+                  socket.emit("timer_bg_event", generateBackgroundMessage("lightgreen"));
+                }
 
-              function _hidden_cage_unsafe() {
-                socket.emit("timer_bg_event", generateBackgroundMessage("red"));
-              }
-              
-            </script>
-            <button class="button is-large is-dark" onclick="_hidden_test_sound()">Sound Test</button>
-            <button class="button is-large is-dark" onclick="_hidden_hide_timer()">Hide Timer</button>
-            <button class="button is-large is-dark" onclick="_hidden_cage_unsafe()">Set Cage UNSAFE</button>
-            <button class="button is-large is-dark" onclick="_hidden_cage_safe()">Set Cage SAFE</button>
-
+                function _hidden_cage_unsafe() {
+                  socket.emit("timer_bg_event", generateBackgroundMessage("red"));
+                }
+              </script>
+              <button class="button is-info is-large is-fullwidth mb-3" onclick="_hidden_test_sound()" style="min-height: 3rem;">
+                🔊 SOUND TEST
+              </button>
+              <button class="button is-dark is-large is-fullwidth" onclick="_hidden_hide_timer()" style="min-height: 3rem;">
+                🙈 HIDE TIMER
+              </button>
+            </div>
+            <div class="column">
+              <button class="button is-success is-large is-fullwidth mb-3" onclick="_hidden_cage_safe()" style="min-height: 3rem;">
+                ✅ CAGE SAFE
+              </button>
+              <button class="button is-danger is-large is-fullwidth" onclick="_hidden_cage_unsafe()" style="min-height: 3rem;">
+                ⚠️ CAGE UNSAFE
+              </button>
+            </div>
           </div>
         </div>
       </div> <!-- column end -->
 
-      <div class="column" id="matches_result_location"> <!-- matches column.-->
-
+      <div class="column is-4"> <!-- matches column -->
+        <!-- MATCH QUEUE SECTION -->
+        <div class="box has-background-warning-dark">
+          <h3 class="title is-4 has-text-black has-text-centered mb-4">
+            📋 UPCOMING MATCHES
+          </h3>
+          <div id="matches_result_location">
+            <!-- Match data will be loaded here -->
+          </div>
+        </div>
       </div> <!-- end column matches. -->
 
     </div> <!-- columns end -->
@@ -442,6 +719,8 @@ function manualTimerInput() {
 
   <script>
     stopTimer();
+    updateSwapButtonText(); // Initialize swap button display
+    updateSlotSwapButtonText(); // Initialize slot swap button display
     socket.emit('client_requests_schedule'); // testing.  Here's hoping it works.
   </script>
 {% endblock %}

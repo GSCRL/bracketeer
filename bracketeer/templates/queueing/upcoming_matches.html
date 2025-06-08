@@ -88,37 +88,56 @@
             <span class="tag is-danger">ACTIVE</span>
           </div>
         </div>
-        <div class="column is-5">
-          {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
-          <div class="box has-background-danger-light">
-            <p class="has-text-weight-bold is-size-5">🔴 {{ match.slots[0].bracketeer_player_data.name }}</p>
-            <div class="tags has-addons">
-              <span class="tag">Record</span>
-              <span class="tag is-success">{{ match.slots[0].bracketeer_player_data.wins }}W</span>
-              <span class="tag is-danger">{{ match.slots[0].bracketeer_player_data.losses }}L</span>
-              <span class="tag is-warning">{{ match.slots[0].bracketeer_player_data.ties }}T</span>
+        <div class="column is-10">
+          <!-- BLUE CORNER (TOP) -->
+          {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
+          <div class="box has-background-info-light mb-3">
+            <div class="has-text-centered">
+              <span class="tag is-info is-medium mb-2">🔵 BLUE CORNER (TOP)</span>
+            </div>
+            <p class="has-text-weight-bold is-size-4 has-text-centered">{{ match.slots[1].bracketeer_player_data.name }}</p>
+            <div class="has-text-centered">
+              <div class="tags has-addons is-justify-content-center">
+                <span class="tag">Record</span>
+                <span class="tag is-success">{{ match.slots[1].bracketeer_player_data.wins }}W</span>
+                <span class="tag is-danger">{{ match.slots[1].bracketeer_player_data.losses }}L</span>
+                <span class="tag is-warning">{{ match.slots[1].bracketeer_player_data.ties }}T</span>
+              </div>
             </div>
           </div>
           {% else %}
-          <div class="box has-background-danger-light">
-            <p class="has-text-weight-bold is-size-5">🔴 TBD</p>
+          <div class="box has-background-info-light mb-3">
+            <div class="has-text-centered">
+              <span class="tag is-info is-medium mb-2">🔵 BLUE CORNER (TOP)</span>
+            </div>
+            <p class="has-text-weight-bold is-size-4 has-text-centered">TBD</p>
           </div>
           {% endif %}
-        </div>
-        <div class="column is-5">
-          {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
-          <div class="box has-background-info-light">
-            <p class="has-text-weight-bold is-size-5">🔵 {{ match.slots[1].bracketeer_player_data.name }}</p>
-            <div class="tags has-addons">
-              <span class="tag">Record</span>
-              <span class="tag is-success">{{ match.slots[1].bracketeer_player_data.wins }}W</span>
-              <span class="tag is-danger">{{ match.slots[1].bracketeer_player_data.losses }}L</span>
-              <span class="tag is-warning">{{ match.slots[1].bracketeer_player_data.ties }}T</span>
+          
+          <div class="has-text-centered has-text-weight-bold is-size-3 mb-3">VS</div>
+          
+          <!-- RED CORNER (BOTTOM) -->
+          {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
+          <div class="box has-background-danger-light">
+            <div class="has-text-centered">
+              <span class="tag is-danger is-medium mb-2">🔴 RED CORNER (BOTTOM)</span>
+            </div>
+            <p class="has-text-weight-bold is-size-4 has-text-centered">{{ match.slots[0].bracketeer_player_data.name }}</p>
+            <div class="has-text-centered">
+              <div class="tags has-addons is-justify-content-center">
+                <span class="tag">Record</span>
+                <span class="tag is-success">{{ match.slots[0].bracketeer_player_data.wins }}W</span>
+                <span class="tag is-danger">{{ match.slots[0].bracketeer_player_data.losses }}L</span>
+                <span class="tag is-warning">{{ match.slots[0].bracketeer_player_data.ties }}T</span>
+              </div>
             </div>
           </div>
           {% else %}
-          <div class="box has-background-info-light">
-            <p class="has-text-weight-bold is-size-5">🔵 TBD</p>
+          <div class="box has-background-danger-light">
+            <div class="has-text-centered">
+              <span class="tag is-danger is-medium mb-2">🔴 RED CORNER (BOTTOM)</span>
+            </div>
+            <p class="has-text-weight-bold is-size-4 has-text-centered">TBD</p>
           </div>
           {% endif %}
         </div>
@@ -160,37 +179,56 @@
             {% endif %}
           </div>
         </div>
-        <div class="column is-5">
-          {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
-          <div class="box">
-            <p class="has-text-weight-bold is-size-5">🔴 {{ match.slots[0].bracketeer_player_data.name }}</p>
-            <div class="tags has-addons">
-              <span class="tag">Record</span>
-              <span class="tag is-success">{{ match.slots[0].bracketeer_player_data.wins }}W</span>
-              <span class="tag is-danger">{{ match.slots[0].bracketeer_player_data.losses }}L</span>
-              <span class="tag is-warning">{{ match.slots[0].bracketeer_player_data.ties }}T</span>
+        <div class="column is-10">
+          <!-- BLUE CORNER (TOP) -->
+          {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
+          <div class="box has-background-info-light mb-3">
+            <div class="has-text-centered">
+              <span class="tag is-info is-medium mb-2">🔵 BLUE CORNER (TOP)</span>
+            </div>
+            <p class="has-text-weight-bold is-size-4 has-text-centered">{{ match.slots[1].bracketeer_player_data.name }}</p>
+            <div class="has-text-centered">
+              <div class="tags has-addons is-justify-content-center">
+                <span class="tag">Record</span>
+                <span class="tag is-success">{{ match.slots[1].bracketeer_player_data.wins }}W</span>
+                <span class="tag is-danger">{{ match.slots[1].bracketeer_player_data.losses }}L</span>
+                <span class="tag is-warning">{{ match.slots[1].bracketeer_player_data.ties }}T</span>
+              </div>
             </div>
           </div>
           {% else %}
-          <div class="box">
-            <p class="has-text-weight-bold is-size-5">🔴 TBD</p>
+          <div class="box has-background-info-light mb-3">
+            <div class="has-text-centered">
+              <span class="tag is-info is-medium mb-2">🔵 BLUE CORNER (TOP)</span>
+            </div>
+            <p class="has-text-weight-bold is-size-4 has-text-centered">TBD</p>
           </div>
           {% endif %}
-        </div>
-        <div class="column is-5">
-          {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
-          <div class="box">
-            <p class="has-text-weight-bold is-size-5">🔵 {{ match.slots[1].bracketeer_player_data.name }}</p>
-            <div class="tags has-addons">
-              <span class="tag">Record</span>
-              <span class="tag is-success">{{ match.slots[1].bracketeer_player_data.wins }}W</span>
-              <span class="tag is-danger">{{ match.slots[1].bracketeer_player_data.losses }}L</span>
-              <span class="tag is-warning">{{ match.slots[1].bracketeer_player_data.ties }}T</span>
+          
+          <div class="has-text-centered has-text-weight-bold is-size-3 mb-3">VS</div>
+          
+          <!-- RED CORNER (BOTTOM) -->
+          {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
+          <div class="box has-background-danger-light">
+            <div class="has-text-centered">
+              <span class="tag is-danger is-medium mb-2">🔴 RED CORNER (BOTTOM)</span>
+            </div>
+            <p class="has-text-weight-bold is-size-4 has-text-centered">{{ match.slots[0].bracketeer_player_data.name }}</p>
+            <div class="has-text-centered">
+              <div class="tags has-addons is-justify-content-center">
+                <span class="tag">Record</span>
+                <span class="tag is-success">{{ match.slots[0].bracketeer_player_data.wins }}W</span>
+                <span class="tag is-danger">{{ match.slots[0].bracketeer_player_data.losses }}L</span>
+                <span class="tag is-warning">{{ match.slots[0].bracketeer_player_data.ties }}T</span>
+              </div>
             </div>
           </div>
           {% else %}
-          <div class="box">
-            <p class="has-text-weight-bold is-size-5">🔵 TBD</p>
+          <div class="box has-background-danger-light">
+            <div class="has-text-centered">
+              <span class="tag is-danger is-medium mb-2">🔴 RED CORNER (BOTTOM)</span>
+            </div>
+            <p class="has-text-weight-bold is-size-4 has-text-centered">TBD</p>
           </div>
           {% endif %}
         </div>
@@ -221,23 +259,32 @@
             {% if match.tournament_display_name %}
             <p class="is-size-7 has-text-grey">{{ match.tournament_display_name }}</p>
             {% endif %}
-            <div class="columns is-mobile">
-              <div class="column">
-                {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
-                <p>🔴 {{ match.slots[0].bracketeer_player_data.name }}</p>
-                <small>{{ match.slots[0].bracketeer_player_data.wins }}W-{{ match.slots[0].bracketeer_player_data.losses }}L-{{ match.slots[0].bracketeer_player_data.ties }}T</small>
-                {% else %}
-                <p>🔴 TBD</p>
-                {% endif %}
+            <!-- BLUE CORNER (TOP) -->
+            <div class="box has-background-info-light mb-2" style="padding: 0.75rem;">
+              <div class="has-text-centered">
+                <span class="tag is-info is-small mb-1">🔵 BLUE CORNER (TOP)</span>
               </div>
-              <div class="column">
-                {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
-                <p>🔵 {{ match.slots[1].bracketeer_player_data.name }}</p>
-                <small>{{ match.slots[1].bracketeer_player_data.wins }}W-{{ match.slots[1].bracketeer_player_data.losses }}L-{{ match.slots[1].bracketeer_player_data.ties }}T</small>
-                {% else %}
-                <p>🔵 TBD</p>
-                {% endif %}
+              {% if match.slots and match.slots|length > 1 and match.slots[1].bracketeer_player_data %}
+              <p class="has-text-weight-bold has-text-centered">{{ match.slots[1].bracketeer_player_data.name }}</p>
+              <small class="has-text-centered is-block">{{ match.slots[1].bracketeer_player_data.wins }}W-{{ match.slots[1].bracketeer_player_data.losses }}L-{{ match.slots[1].bracketeer_player_data.ties }}T</small>
+              {% else %}
+              <p class="has-text-weight-bold has-text-centered">TBD</p>
+              {% endif %}
+            </div>
+            
+            <div class="has-text-centered has-text-weight-bold mb-2">VS</div>
+            
+            <!-- RED CORNER (BOTTOM) -->
+            <div class="box has-background-danger-light" style="padding: 0.75rem;">
+              <div class="has-text-centered">
+                <span class="tag is-danger is-small mb-1">🔴 RED CORNER (BOTTOM)</span>
               </div>
+              {% if match.slots and match.slots|length > 0 and match.slots[0].bracketeer_player_data %}
+              <p class="has-text-weight-bold has-text-centered">{{ match.slots[0].bracketeer_player_data.name }}</p>
+              <small class="has-text-centered is-block">{{ match.slots[0].bracketeer_player_data.wins }}W-{{ match.slots[0].bracketeer_player_data.losses }}L-{{ match.slots[0].bracketeer_player_data.ties }}T</small>
+              {% else %}
+              <p class="has-text-weight-bold has-text-centered">TBD</p>
+              {% endif %}
             </div>
           </div>
         </div>

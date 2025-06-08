@@ -19,6 +19,47 @@
     </div>
 </section>
 
+<!-- Red/Blue Positioning Defaults -->
+<section class="section">
+    <div class="block">
+        <h2 class="subtitle">🔴🔵 Red/Blue Positioning Defaults</h2>
+        <p class="help">Set default red/blue positioning for all cages. Individual cages can override these settings during matches.</p>
+    </div>
+    <div class="columns">
+        <div class="column">
+            <div class="field">
+                <label class="label">TrueFinals Slot Assignment</label>
+                <div class="control">
+                    <label class="checkbox">
+                        <input type="checkbox" id="slots_swap_default" {% if arena_settings.red_blue_positioning and arena_settings.red_blue_positioning.slots_swap_default %}checked{% endif %}>
+                        <strong>Swap TrueFinals slots by default</strong>
+                    </label>
+                </div>
+                <p class="help">Check this if TrueFinals consistently has slot[0]=BLUE and slot[1]=RED instead of the expected slot[0]=RED and slot[1]=BLUE</p>
+            </div>
+        </div>
+        <div class="column">
+            <div class="field">
+                <label class="label">Physical Robot Positions</label>
+                <div class="control">
+                    <label class="checkbox">
+                        <input type="checkbox" id="physical_swap_default" {% if arena_settings.red_blue_positioning and arena_settings.red_blue_positioning.physical_swap_default %}checked{% endif %}>
+                        <strong>Swap physical positions by default</strong>
+                    </label>
+                </div>
+                <p class="help">Check this if robots typically enter the arena in opposite corners from what the timer displays show</p>
+            </div>
+        </div>
+    </div>
+    <div class="field">
+        <div class="control">
+            <button class="button is-primary" onclick="savePositioningDefaults()">
+                Save Positioning Defaults
+            </button>
+        </div>
+    </div>
+</section>
+
 <!-- Cage only metadata. -->
 <section class="section">
     <div class="block">
@@ -176,5 +217,42 @@ function togglePasswordVisibility(fieldId) {
         field.type = 'password';
         icon.className = 'fas fa-eye';
     }
+}
+
+function savePositioningDefaults() {
+    const slotsSwapDefault = document.getElementById('slots_swap_default').checked;
+    const physicalSwapDefault = document.getElementById('physical_swap_default').checked;
+    
+    // Send POST request to save positioning defaults
+    fetch('/settings/positioning', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            slots_swap_default: slotsSwapDefault,
+            physical_swap_default: physicalSwapDefault
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            const button = document.querySelector('button[onclick="savePositioningDefaults()"]');
+            const originalText = button.innerHTML;
+            button.innerHTML = '✅ Saved!';
+            button.className = 'button is-success';
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.className = 'button is-primary';
+            }, 2000);
+        } else {
+            alert('Error saving positioning defaults: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving positioning defaults');
+    });
 }
 </script>

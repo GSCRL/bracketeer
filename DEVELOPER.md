@@ -233,3 +233,17 @@ purge_API_Cache(timer_passed=0)  # Purge all
 - TrueFinals API Docs: https://truefinals.com/docs.html
 - Rate limiting headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
 - Tournament URL pattern: `https://truefinals.com/tournament/{tournamentID}`
+
+
+# issues
+
+✅ **RESOLVED**: Need to be able to swap red and blue. In the match page.
+
+**Solution implemented**: 
+- Added visual red/blue positioning in match queue (top=blue, bottom=red)
+- Added "📋 NORMAL SLOTS" button to override TrueFinals slot assignment when backwards
+- Added dual-layer swapping: slot assignment override + physical position swap
+- All settings persist per cage using localStorage
+- **NEW**: Global event-level defaults in `/settings` page and `event.json`
+- Cages initialize from event defaults but can override individually
+- "Reset to Event Defaults" button restores global settings per cage
