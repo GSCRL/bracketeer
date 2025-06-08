@@ -11,11 +11,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Quick start - development server with auto port detection
 ./scripts/start-development.sh
 
-# Manual development server
-python -m bracketeer --dev
+# Manual development server (using uv)
+uv run bracketeer --dev
 
 # Custom development configuration
-python -m bracketeer --port 8080 --dev --debug
+uv run bracketeer --port 8080 --dev --debug
+
+# Direct Python execution (requires manual dependency management)
+python -m bracketeer --dev
 ```
 
 *Production Mode (recommended for tournaments/events):*
@@ -23,24 +26,27 @@ python -m bracketeer --port 8080 --dev --debug
 # Quick start - production server 
 ./scripts/start-production.sh
 
-# Manual production server
+# Manual production server (using uv)
 export BRACKETEER_ENV=production
-python -m bracketeer --host 0.0.0.0 --port 80 --no-debug
+uv run bracketeer --host 0.0.0.0 --port 80 --no-debug
 
 # Custom production configuration
-python -m bracketeer --host 0.0.0.0 --port 8080 --no-debug
+uv run bracketeer --host 0.0.0.0 --port 8080 --no-debug
+
+# Direct Python execution (requires manual dependency management)
+python -m bracketeer --host 0.0.0.0 --port 80 --no-debug
 ```
 
 *Development Server Options:*
 ```bash
 # Default mode (port 80, fails if port in use)
-python -m bracketeer
+uv run bracketeer
 
 # Custom host and port
-python -m bracketeer --host 127.0.0.1 --port 5000
+uv run bracketeer --host 127.0.0.1 --port 5000
 
 # Enable debug mode explicitly
-python -m bracketeer --debug
+uv run bracketeer --debug
 ```
 
 **Install dependencies (development):**

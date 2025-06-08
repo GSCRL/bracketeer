@@ -14,6 +14,9 @@ dependencies = [
     "piccolo[sqlite]>=1.22.0",
 ]
 
+[project.scripts]
+bracketeer = "bracketeer.__main__:main"
+
 [dependency-groups]
 dev = [
     "black>=25.1.0",
@@ -26,6 +29,9 @@ dev = [
     "requests>=2.32.3",
     "ruff>=0.11.4",
 ]
+
+[tool.uv]
+package = true
 
 [tool.ruff.lint]
 select = ["F401", "I", "PERF", "YTT", "ANN"]

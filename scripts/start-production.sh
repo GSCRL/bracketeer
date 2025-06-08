@@ -22,4 +22,4 @@ echo "Starting Bracketeer in production mode..."
 echo "Server will be available at http://0.0.0.0:80"
 echo "To stop the server, use Ctrl+C"
 
-python -m bracketeer --host 0.0.0.0 --port 80 --no-debug
+uv run bracketeer --host 0.0.0.0 --port 80 --no-debug
