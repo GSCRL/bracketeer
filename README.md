@@ -22,7 +22,11 @@ To install you'll need python 3.9 or greater, then to install `uv`, then uv run 
 
 ## Building
 
-To build the package, run `uv install --extra dev` and then ` uv pip install -e .` (for the package, otherwise just run `uv run ./bracketeer/__main.py`)
+To build the package, run `uv install --extra dev` and then ` uv pip install -e .`
+
+To run the now-built package, use `python -m bracketeer .`
+
+(There is a known bug involving running the package locally, evaluating.)
 
 ## Networking Setup
 
@@ -31,6 +35,10 @@ When running the host computer, setting a static IP address is not optional.  If
 GSCRL uses `192.168.8.250` due to the DHCP range by default of our [travel router](https://www.amazon.com/GL-iNet-GL-SFT1200-Secure-Travel-Router/dp/B09N72FMH5).  Anything will work, but be consistent and set the netmask properly (/24 | 255.255.255.0 by default)
 
 GSCRL *also* sets a DNS override in the DNS server on the travel router to make `192.168.8.250` point to `arena.gscrl.org`.  This was a legacy holdover from when using slow-rotating but externally validated Let's Encrypt setups even offline, but was retained for convenience.
+
+### Tip
+
+Be sure if using Windows to have Windows Firewall set to a "private" network, otherwise the webserver running on port 80 *will* be blocked.
 
 ## Additional Tools
 

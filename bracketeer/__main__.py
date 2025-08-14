@@ -19,6 +19,8 @@ app.register_blueprint(user_screens, url_prefix="/screens")
 app.register_blueprint(match_results, url_prefix="/matches")
 app.register_blueprint(debug_pages, url_prefix="/debug")
 
+### TODO: Add debug index page that lists all debug routes.
+
 app.config["SECRET_KEY"] = "secret secret key (required)!"
 socketio = SocketIO(app)
 
@@ -47,9 +49,9 @@ def generateSettingsPage():
         )
 
 
-@app.route("/debug/requests")
+@app.route("/debug/requests.json")
 def _debug_requests():
-    from api_truefinals.cached_api import TrueFinalsAPICache
+    from bracketeer.api_truefinals.cached_api import TrueFinalsAPICache
 
     return jsonify(
         TrueFinalsAPICache.select()
@@ -58,6 +60,13 @@ def _debug_requests():
         .output(load_json=True)
         .run_sync(),
     )
+
+
+@app.route("/debug/test_api_keys.json")
+def _debug_api_keys():
+    from bracketeer.api_truefinals.api import testAPIKeys
+
+    return jsonify(testAPIKeys())
 
 
 @app.route("/clients", methods=("GET", "POST"))

@@ -3,9 +3,15 @@ from pathlib import Path
 
 from dynaconf import Dynaconf
 
-secrets = Dynaconf(envvar_prefix="DYNACONF", settings_files=[Path(".secrets.json")])
+# We should prefer secrets explicitly specified by flag, then in pwd, and finally by default.
+# This is unfinished, but works decently as-is.  Wait for Rick's changes back to include
+# any uv fixes before resolving path inconsistencies.
 
-settings = Dynaconf(envvar_prefix="DYNACONF", settings_files=[Path("./event.json")])
+if (Path.cwd() / ".secrets.json").exists():
+    secrets = Dynaconf(envvar_prefix="DYNACONF", settings_files=[Path(".secrets.json")])
+
+if (Path.cwd() / "event.json").exists():
+    settings = Dynaconf(envvar_prefix="DYNACONF", settings_files=[Path("event.json")])
 
 
 def mandateConfig():

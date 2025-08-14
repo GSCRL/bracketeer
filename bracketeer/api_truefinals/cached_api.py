@@ -83,6 +83,7 @@ def _generate_cache_query(api_endpoint, expiry=60, expired_is_ok=False):
         )
         .where(TrueFinalsAPICache.api_path == api_endpoint)
         .where(TrueFinalsAPICache.successful == True)
+        .where(TrueFinalsAPICache.resp_code != 401)  # Added to cut out user ID issues.
     )
     if not expired_is_ok:
         find_response = find_response.where(
